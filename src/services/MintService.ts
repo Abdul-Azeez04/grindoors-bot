@@ -1,5 +1,5 @@
 import { EmbedBuilder } from 'discord.js';
-import prisma from '../database/client';
+import { prisma } from "../database/client";
 import { Colors } from '../config/constants';
 
 export class MintService {

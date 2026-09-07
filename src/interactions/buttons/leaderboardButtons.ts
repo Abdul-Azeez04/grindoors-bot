@@ -1,7 +1,7 @@
 import { ButtonInteraction, EmbedBuilder } from 'discord.js';
 import { LeaderboardService } from '../../services/LeaderboardService';
 import { Colors } from '../../config/constants';
-import logger from '../../utils/logger';
+import { logger } from "../../utils/logger";
 
 export async function handleLeaderboardButton(interaction: ButtonInteraction) {
   try {

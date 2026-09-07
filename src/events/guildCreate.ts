@@ -1,5 +1,5 @@
 import { Guild, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ChannelType } from 'discord.js';
-import logger from '../utils/logger';
+import { logger } from "../utils/logger";
 import { Colors } from '../config/constants';
 
 export async function handleGuildCreate(guild: Guild) {

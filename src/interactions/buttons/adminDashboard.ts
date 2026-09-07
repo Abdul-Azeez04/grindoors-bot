@@ -1,6 +1,6 @@
 import { ButtonInteraction } from 'discord.js';
 import { requireAdmin } from '../../middleware/permissionGuard';
-import logger from '../../utils/logger';
+import { logger } from "../../utils/logger";
 
 export async function handleAdminDashboardButton(interaction: ButtonInteraction) {
   try {

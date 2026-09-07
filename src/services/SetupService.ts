@@ -2,8 +2,8 @@ import { Guild, GuildMember, ChannelType } from 'discord.js';
 import { channelService } from './ChannelService';
 import { roleService } from './RoleService';
 import { serverAuditService } from './ServerAuditService';
-import prisma from '../database/client';
-import logger from '../utils/logger';
+import { prisma } from "../database/client";
+import { logger } from "../utils/logger";
 
 export interface SetupResult {
   channelsCreated: string[];

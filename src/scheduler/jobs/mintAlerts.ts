@@ -1,5 +1,5 @@
 import { mintService } from '../../services/MintService';
-import prisma from '../../database/client';
+import { prisma } from "../../database/client";
 import { client } from '../../index'; // assuming export from index
 import { ChannelType } from 'discord.js';
 

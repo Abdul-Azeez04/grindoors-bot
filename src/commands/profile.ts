@@ -1,5 +1,5 @@
 import { ChatInputCommandInteraction, SlashCommandBuilder, EmbedBuilder } from 'discord.js';
-import prisma from '../database/client';
+import { prisma } from "../database/client";
 import { Colors } from '../config/constants';
 import { XPService } from '../services/XPService';
 import { requireAdmin } from '../middleware/permissionGuard';

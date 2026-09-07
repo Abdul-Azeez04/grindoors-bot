@@ -3,7 +3,7 @@ import { LinkSecurityService } from '../services/LinkSecurityService';
 import { ModerationService } from '../services/ModerationService';
 import { AuditLogService } from '../services/AuditLogService';
 import { Colors } from '../config/constants';
-import logger from '../utils/logger';
+import { logger } from "../utils/logger";
 
 export async function onMessageCreate(message: Message) {
   if (message.author.bot || !message.guild) return;

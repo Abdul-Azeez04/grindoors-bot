@@ -1,6 +1,6 @@
 import { REST, Routes } from 'discord.js';
 import { config } from 'dotenv';
-import logger from './utils/logger';
+import { logger } from "./utils/logger";
 import * as verifyCommand from './commands/verify';
 import * as helpCommand from './commands/help';
 import * as profileCommand from './commands/profile';

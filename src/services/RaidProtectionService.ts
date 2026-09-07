@@ -1,6 +1,6 @@
 import { Guild } from 'discord.js';
-import prisma from '../database/client';
-import logger from '../utils/logger';
+import { prisma } from "../database/client";
+import { logger } from "../utils/logger";
 
 export class RaidProtectionService {
   private static recentJoins = new Map<string, { timestamps: number[] }>();

@@ -1,7 +1,7 @@
 import { ModalSubmitInteraction, EmbedBuilder } from 'discord.js';
 import { mintService } from '../../services/MintService';
 import { Colors } from '../../config/constants';
-import logger from '../../utils/logger';
+import { logger } from "../../utils/logger";
 
 export async function handleMintModal(interaction: ModalSubmitInteraction) {
   if (interaction.customId === 'modal_add_mint') {

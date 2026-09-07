@@ -1,7 +1,7 @@
 import { Guild, EmbedBuilder, ChannelType } from 'discord.js';
-import prisma from '../database/client';
+import { prisma } from "../database/client";
 import { Colors } from '../config/constants';
-import logger from '../utils/logger';
+import { logger } from "../utils/logger";
 
 export class GMService {
   async postDailyGM(guild: Guild, guildId: string): Promise<void> {

@@ -1,5 +1,5 @@
-import prisma from '../database/client';
-import logger from '../utils/logger';
+import { prisma } from "../database/client";
+import { logger } from "../utils/logger";
 
 export type Analytics = {
   totalMembers: number;

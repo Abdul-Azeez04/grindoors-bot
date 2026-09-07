@@ -1,5 +1,5 @@
 import { ButtonInteraction } from 'discord.js';
-import logger from '../../utils/logger';
+import { logger } from "../../utils/logger";
 
 export async function handleHubButton(interaction: ButtonInteraction) {
   try {

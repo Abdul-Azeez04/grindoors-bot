@@ -9,6 +9,5 @@ COPY prisma ./prisma/
 RUN npx prisma generate
 
 COPY . .
-RUN npm run build
 
-CMD ["npm", "start"]
+CMD ["npm", "run", "dev"]

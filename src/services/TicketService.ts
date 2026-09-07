@@ -1,6 +1,6 @@
 import { Guild, TextChannel, ChannelType, PermissionsBitField, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
-import prisma from '../database/client';
-import logger from '../utils/logger';
+import { prisma } from "../database/client";
+import { logger } from "../utils/logger";
 import { Colors } from '../config/constants';
 
 export class TicketService {

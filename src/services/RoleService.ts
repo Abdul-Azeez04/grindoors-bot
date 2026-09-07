@@ -1,6 +1,6 @@
 import { Guild, Role, GuildMember, ColorResolvable } from 'discord.js';
-import logger from '../utils/logger';
-import prisma from '../database/client';
+import { logger } from "../utils/logger";
+import { prisma } from "../database/client";
 
 export class RoleService {
   async createRole(guild: Guild, name: string, options?: { color?: ColorResolvable, permissions?: bigint, hoist?: boolean, mentionable?: boolean }): Promise<Role> {

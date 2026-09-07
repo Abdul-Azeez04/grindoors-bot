@@ -1,6 +1,6 @@
 import { Guild, EmbedBuilder } from 'discord.js';
-import prisma from '../database/client';
-import logger from '../utils/logger';
+import { prisma } from "../database/client";
+import { logger } from "../utils/logger";
 
 export class AuditLogService {
   static async log(guildId: string, actorId: string, action: string, targetId?: string, targetType?: string, metadata?: any): Promise<void> {

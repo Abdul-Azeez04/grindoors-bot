@@ -1,5 +1,5 @@
-import prisma from '../database/client';
-import logger from '../utils/logger';
+import { prisma } from "../database/client";
+import { logger } from "../utils/logger";
 
 export class LeaderboardService {
   static async getXPLeaderboard(guildId: string, limit = 10): Promise<{ discordId: string; username: string; xp: number; level: number }[]> {

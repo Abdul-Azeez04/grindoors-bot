@@ -1,6 +1,6 @@
 import { Worker } from 'bullmq';
 import { redisConnection } from './queue';
-import logger from '../utils/logger';
+import { logger } from "../utils/logger";
 import dailyGMHandler from './jobs/dailyGM';
 import mintAlertsHandler from './jobs/mintAlerts';
 import dailyRoleRotationHandler from './jobs/dailyRoleRotation';

@@ -1,6 +1,6 @@
 import { Guild, EmbedBuilder } from 'discord.js';
-import prisma from '../database/client';
-import logger from '../utils/logger';
+import { prisma } from "../database/client";
+import { logger } from "../utils/logger";
 import { Colors } from '../config/constants';
 
 export class ReportService {

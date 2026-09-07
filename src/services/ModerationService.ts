@@ -1,6 +1,6 @@
 import { Guild, Message } from 'discord.js';
-import prisma from '../database/client';
-import logger from '../utils/logger';
+import { prisma } from "../database/client";
+import { logger } from "../utils/logger";
 
 export class ModerationService {
   private static recentMessages = new Map<string, { content: string, timestamp: number }[]>();

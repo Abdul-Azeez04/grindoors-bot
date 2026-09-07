@@ -1,6 +1,6 @@
 import { ModalSubmitInteraction } from 'discord.js';
 import { gmService } from '../../services/GMService';
-import logger from '../../utils/logger';
+import { logger } from "../../utils/logger";
 
 export async function handleQuoteModal(interaction: ModalSubmitInteraction) {
   if (interaction.customId === 'modal_add_quote') {

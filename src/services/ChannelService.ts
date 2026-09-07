@@ -1,5 +1,5 @@
 import { Guild, ChannelType, GuildChannel, CategoryChannel, OverwriteResolvable } from 'discord.js';
-import logger from '../utils/logger';
+import { logger } from "../utils/logger";
 
 export class ChannelService {
   async createChannel(guild: Guild, name: string, type: ChannelType, options?: { category?: string, topic?: string, permissions?: OverwriteResolvable[] }): Promise<GuildChannel> {
