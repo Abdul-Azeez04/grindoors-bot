@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: grindoors-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: grindoors
+      POSTGRES_PASSWORD: grindoors_password
+      POSTGRES_DB: grindoors_bot
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+    container_name: grindoors-redis
+    restart: unless-stopped
+    ports:
+      - '6379:6379'
+    volumes:
+      - redis_data:/data
+
+  bot:
+    build: .
+    container_name: grindoors-bot
+    restart: unless-stopped
+    depends_on:
+      - postgres
+      - redis
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql://grindoors:grindoors_password@postgres:5432/grindoors_bot?schema=public
+      REDIS_URL: redis://redis:6379
+
+volumes:
+  postgres_data:
+  redis_data:

@@ -1,0 +1,382 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum VerificationStatus {
+  UNVERIFIED
+  CAPTCHA_PASSED
+  WAITING_ROOM
+  VERIFIED
+}
+
+enum RoleType {
+  HIERARCHY
+  GAMING_RANK
+  DAILY
+  SPECIAL
+}
+
+enum MintStatus {
+  UPCOMING
+  LIVE
+  ENDED
+  CANCELLED
+}
+
+enum TicketCategory {
+  GENERAL
+  VERIFICATION
+  REPORT
+  PARTNERSHIP
+  TECHNICAL
+  PAYMENT
+  OTHER
+}
+
+enum TicketStatus {
+  OPEN
+  CLAIMED
+  ESCALATED
+  CLOSED
+}
+
+enum WarningSeverity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum ModActionType {
+  WARN
+  TIMEOUT
+  KICK
+  BAN
+  UNBAN
+  MUTE
+  UNMUTE
+  MESSAGE_DELETE
+}
+
+enum GameStatus {
+  WAITING
+  ACTIVE
+  FINISHED
+  CANCELLED
+}
+
+enum XPSource {
+  GAME
+  DAILY
+  STREAK
+  CHALLENGE
+  EVENT
+  ADMIN
+  OTHER
+}
+
+enum ReportCategory {
+  SCAM
+  SUSPICIOUS_LINK
+  HARASSMENT
+  FAKE_ACCOUNT
+  FAKE_PROJECT
+  SUSPICIOUS_DM
+  OTHER
+}
+
+enum ReportStatus {
+  PENDING
+  INVESTIGATING
+  RESOLVED
+  DISMISSED
+}
+
+model Guild {
+  id                 String   @id
+  name               String
+  timezone           String   @default("Africa/Lagos")
+  setupComplete      Boolean  @default(false)
+  verificationConfig Json?
+  moderationConfig   Json?
+  gameConfig         Json?
+  xpConfig           Json?
+  raidMode           Boolean  @default(false)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  members            Member[]
+  accessCodes        AccessCode[]
+  roleConfigs        RoleConfig[]
+  mints              Mint[]
+  quotes             Quote[]
+  tickets            Ticket[]
+  warnings           Warning[]
+  moderationActions  ModerationAction[]
+  games              Game[]
+  xpTransactions     XPTransaction[]
+  auditLogs          AuditLog[]
+  raidEvents         RaidEvent[]
+  reports            Report[]
+}
+
+model Member {
+  discordId          String
+  guildId            String
+  username           String
+  verificationStatus VerificationStatus @default(UNVERIFIED)
+  joinedAt           DateTime
+  verifiedAt         DateTime?
+  level              Int      @default(1)
+  xp                 Int      @default(0)
+  warningCount       Int      @default(0)
+  isMuted            Boolean  @default(false)
+  isBanned           Boolean  @default(false)
+  dailyStreak        Int      @default(0)
+  lastDailyAt        DateTime?
+  totalGamesPlayed   Int      @default(0)
+  totalGamesWon      Int      @default(0)
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  guild              Guild    @relation(fields: [guildId], references: [id], onDelete: Cascade)
+
+  @@id([discordId, guildId])
+  @@index([discordId])
+}
+
+model AccessCode {
+  id           Int       @id @default(autoincrement())
+  code         String    @unique
+  guildId      String
+  createdById  String
+  name         String
+  maxUses      Int       @default(-1)
+  currentUses  Int       @default(0)
+  expiresAt    DateTime?
+  isActive     Boolean   @default(true)
+  roleId       String?
+  notes        String?
+  createdAt    DateTime  @default(now())
+
+  guild        Guild     @relation(fields: [guildId], references: [id], onDelete: Cascade)
+  usages       AccessCodeUsage[]
+
+  @@index([code])
+  @@index([guildId])
+}
+
+model AccessCodeUsage {
+  id           Int        @id @default(autoincrement())
+  accessCodeId Int
+  memberId     String
+  usedAt       DateTime   @default(now())
+
+  accessCode   AccessCode @relation(fields: [accessCodeId], references: [id], onDelete: Cascade)
+
+  @@index([accessCodeId])
+  @@index([memberId])
+}
+
+model RoleConfig {
+  id           Int      @id @default(autoincrement())
+  guildId      String
+  roleId       String
+  roleName     String
+  type         RoleType
+  isDailyRole  Boolean  @default(false)
+  dailyDay     Int?
+  autoAssign   Boolean  @default(false)
+  priority     Int      @default(0)
+  createdAt    DateTime @default(now())
+
+  guild        Guild    @relation(fields: [guildId], references: [id], onDelete: Cascade)
+
+  @@unique([guildId, roleId])
+}
+
+model Mint {
+  id           Int        @id @default(autoincrement())
+  guildId      String
+  projectName  String
+  chain        String
+  mintTime     DateTime
+  price        String
+  mintUrl      String?
+  contractUrl  String?
+  description  String?
+  alertRoleId  String?
+  createdById  String
+  status       MintStatus @default(UPCOMING)
+  alert24h     Boolean    @default(false)
+  alert1h      Boolean    @default(false)
+  alert15m     Boolean    @default(false)
+  alert5m      Boolean    @default(false)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  guild        Guild      @relation(fields: [guildId], references: [id], onDelete: Cascade)
+
+  @@index([guildId])
+  @@index([status])
+}
+
+model Quote {
+  id          Int      @id @default(autoincrement())
+  guildId     String
+  text        String
+  author      String?
+  createdById String
+  createdAt   DateTime @default(now())
+
+  guild       Guild    @relation(fields: [guildId], references: [id], onDelete: Cascade)
+
+  @@index([guildId])
+}
+
+model Ticket {
+  id           Int            @id @default(autoincrement())
+  guildId      String
+  channelId    String
+  creatorId    String
+  category     TicketCategory
+  status       TicketStatus   @default(OPEN)
+  assignedToId String?
+  createdAt    DateTime       @default(now())
+  closedAt     DateTime?
+  transcriptUrl String?
+
+  guild        Guild          @relation(fields: [guildId], references: [id], onDelete: Cascade)
+
+  @@index([guildId])
+  @@index([status])
+}
+
+model Warning {
+  id          Int             @id @default(autoincrement())
+  guildId     String
+  memberId    String
+  moderatorId String
+  reason      String
+  severity    WarningSeverity
+  createdAt   DateTime        @default(now())
+
+  guild       Guild           @relation(fields: [guildId], references: [id], onDelete: Cascade)
+
+  @@index([guildId, memberId])
+}
+
+model ModerationAction {
+  id          Int           @id @default(autoincrement())
+  guildId     String
+  targetId    String
+  moderatorId String
+  action      ModActionType
+  reason      String?
+  duration    Int?
+  createdAt   DateTime      @default(now())
+
+  guild       Guild         @relation(fields: [guildId], references: [id], onDelete: Cascade)
+
+  @@index([guildId, targetId])
+}
+
+model Game {
+  id          Int        @id @default(autoincrement())
+  guildId     String
+  gameType    String
+  creatorId   String?
+  messageId   String?
+  channelId   String
+  startedAt   DateTime   @default(now())
+  endedAt     DateTime?
+  status      GameStatus @default(WAITING)
+  config      Json?
+
+  guild       Guild      @relation(fields: [guildId], references: [id], onDelete: Cascade)
+  players     GamePlayer[]
+
+  @@index([guildId])
+}
+
+model GamePlayer {
+  id             Int      @id @default(autoincrement())
+  gameId         Int
+  memberId       String
+  score          Int      @default(0)
+  answer         String?
+  isCorrect      Boolean?
+  responseTimeMs Int?
+  createdAt      DateTime @default(now())
+
+  game           Game     @relation(fields: [gameId], references: [id], onDelete: Cascade)
+
+  @@index([gameId])
+  @@index([memberId])
+}
+
+model XPTransaction {
+  id          Int      @id @default(autoincrement())
+  guildId     String
+  memberId    String
+  amount      Int
+  source      XPSource
+  description String?
+  createdAt   DateTime @default(now())
+
+  guild       Guild    @relation(fields: [guildId], references: [id], onDelete: Cascade)
+
+  @@index([guildId, memberId])
+}
+
+model AuditLog {
+  id         Int      @id @default(autoincrement())
+  guildId    String
+  actorId    String
+  action     String
+  targetId   String?
+  targetType String?
+  metadata   Json?
+  createdAt  DateTime @default(now())
+
+  guild      Guild    @relation(fields: [guildId], references: [id], onDelete: Cascade)
+
+  @@index([guildId])
+}
+
+model RaidEvent {
+  id          Int       @id @default(autoincrement())
+  guildId     String
+  detectedAt  DateTime  @default(now())
+  resolvedAt  DateTime?
+  joinCount   Int
+  duration    Int
+  actionsJson Json?
+  resolved    Boolean   @default(false)
+
+  guild       Guild     @relation(fields: [guildId], references: [id], onDelete: Cascade)
+
+  @@index([guildId])
+}
+
+model Report {
+  id          Int            @id @default(autoincrement())
+  guildId     String
+  reporterId  String
+  targetId    String?
+  category    ReportCategory
+  description String
+  status      ReportStatus   @default(PENDING)
+  handledById String?
+  createdAt   DateTime       @default(now())
+  resolvedAt  DateTime?
+
+  guild       Guild          @relation(fields: [guildId], references: [id], onDelete: Cascade)
+
+  @@index([guildId])
+}
