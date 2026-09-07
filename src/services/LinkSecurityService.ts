@@ -1,6 +1,6 @@
 export class LinkSecurityService {
   private static phishingDomains = ['discorcl.com', 'dlscord.gg', 'discord-nitro.com'];
-  private static suspiciousTLDs = ['.xyz', .tk, .ml];
+  private static suspiciousTLDs = ['.xyz', '.tk', '.ml'];
 
   static checkMessage(content: string): { isSuspicious: boolean, reasons: string[], severity: 'low' | 'medium' | 'high' } {
     const reasons: string[] = [];
