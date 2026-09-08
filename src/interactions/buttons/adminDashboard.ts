@@ -79,16 +79,21 @@ export async function handleAdminDashboardButton(interaction: ButtonInteraction)
            }
         }
 
-        // Also clean up bot-created roles
-        const botRoleNames = ['Owner', 'Administrator', 'Moderator', 'Support', 'Game Master', 'Community Manager', 'Verified', 'Member', 'Waiting Room', 'Unverified', 'Muted'];
+        // Nuclear wipe: Delete ALL roles that we can
         let rolesDeleted = 0;
         for (const [id, role] of guild.roles.cache) {
-          if (botRoleNames.includes(role.name) && role.editable) {
-            try { await role.delete(); rolesDeleted++; } catch(e) { /* skip */ }
+          // Skip @everyone, skip managed roles (like other bot integrations), skip roles above us
+          if (role.name !== '@everyone' && !role.managed && role.editable) {
+            try { 
+              await role.delete(); 
+              rolesDeleted++; 
+            } catch(e) { 
+              /* skip if Discord prevents it */ 
+            }
           }
         }
 
-        let msg = `🧹 **Cleanup Complete!**\nDeleted ${deleted} channels/categories and ${rolesDeleted} roles.`;
+        let msg = `🧹 **Nuclear Cleanup Complete!**\nDeleted ${deleted} channels/categories and ${rolesDeleted} roles.`;
         if (skipped.length > 0) msg += `\n⚠️ Could not delete: ${skipped.join(', ')}`;
         await interaction.followUp({ content: msg });
         break;
