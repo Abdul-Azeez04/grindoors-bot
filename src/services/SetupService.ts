@@ -62,9 +62,11 @@ export class SetupService {
           const unverifiedRole = guild.roles.cache.find(r => r.name === 'Unverified');
           
           if (unverifiedRole) {
+            const waitingRoomRole = guild.roles.cache.find(r => r.name === 'Waiting Room');
+            
             if (category.name === 'VERIFICATION') {
-              // VERIFICATION category: Visible to Unverified, hidden from everyone else
-              await catChannel.permissionOverwrites.set([
+              // VERIFICATION category: Visible to Unverified and Waiting Room, hidden from everyone else
+              const overwrites: any[] = [
                 {
                   id: guild.roles.everyone.id,
                   deny: [PermissionsBitField.Flags.ViewChannel],
@@ -74,7 +76,17 @@ export class SetupService {
                   allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.ReadMessageHistory],
                   deny: [PermissionsBitField.Flags.SendMessages],
                 }
-              ]);
+              ];
+              
+              if (waitingRoomRole) {
+                overwrites.push({
+                  id: waitingRoomRole.id,
+                  allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.ReadMessageHistory],
+                  deny: [PermissionsBitField.Flags.SendMessages],
+                });
+              }
+              
+              await catChannel.permissionOverwrites.set(overwrites);
             } else {
               // ALL OTHER categories: Hidden from Unverified role, explicitly visible to Member role
               await catChannel.permissionOverwrites.edit(unverifiedRole.id, {
