@@ -1,12 +1,17 @@
 import { Events, GuildMember } from 'discord.js';
 import { logger } from '../utils/logger';
+import { EventHandler } from '../types';
 
-export const name = Events.GuildMemberRemove;
-export const execute = async (member: GuildMember) => {
-  try {
-    logger.info(`Member left: ${member.user.tag} (${member.id})`);
-    // Audit log placeholder
-  } catch (error) {
-    logger.error(`Error in guildMemberRemove: ${error}`);
+const event: EventHandler = {
+  name: 'guildMemberRemove',
+  once: false,
+  execute: async (member: GuildMember) => {
+    try {
+      logger.info(`Member left: ${member.user.tag} (${member.id})`);
+    } catch (error) {
+      logger.error(`Error in guildMemberRemove: ${error}`);
+    }
   }
 };
+
+export default event;
