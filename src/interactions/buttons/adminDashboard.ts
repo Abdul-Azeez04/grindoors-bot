@@ -40,3 +40,10 @@ export async function handleAdminDashboardButton(interaction: ButtonInteraction)
     }
   }
 }
+
+export default {
+  customIdRegex: /^admin_/,
+  execute: async (interaction: any) => {
+    return handleAdminDashboardButton(interaction);
+  }
+};

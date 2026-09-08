@@ -54,3 +54,10 @@ export async function handleModerationButtons(interaction: ButtonInteraction) {
     await interaction.reply({ content: 'Raid mode toggled.', ephemeral: true });
   }
 }
+
+export default {
+  customIdRegex: /.*/,
+  execute: async (interaction: any) => {
+    return handleModerationButtons(interaction);
+  }
+};

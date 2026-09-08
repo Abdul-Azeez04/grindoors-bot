@@ -4,6 +4,13 @@ import { setupService } from '../../services/SetupService';
 import { serverAuditService } from '../../services/ServerAuditService';
 import { Colors } from '../../config/constants';
 
+export default {
+  customIdRegex: /^setup_/,
+  execute: async (interaction: ButtonInteraction) => {
+    return handleSetupButtons(interaction);
+  }
+};
+
 export async function handleSetupButtons(interaction: ButtonInteraction) {
   if (!requireAdmin(interaction)) {
     return interaction.reply({ content: 'Missing permissions.', ephemeral: true });

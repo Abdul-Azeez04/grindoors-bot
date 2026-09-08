@@ -60,3 +60,10 @@ export async function handleMintButtons(interaction: ButtonInteraction) {
     await interaction.reply({ content: 'Mint deleted.', ephemeral: true });
   }
 }
+
+export default {
+  customIdRegex: /.*/,
+  execute: async (interaction: any) => {
+    return handleMintButtons(interaction);
+  }
+};

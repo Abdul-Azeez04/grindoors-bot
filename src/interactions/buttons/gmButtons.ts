@@ -70,3 +70,10 @@ export async function handleGMButtons(interaction: ButtonInteraction) {
     await interaction.editReply({ content: 'GM posted successfully.' });
   }
 }
+
+export default {
+  customIdRegex: /.*/,
+  execute: async (interaction: any) => {
+    return handleGMButtons(interaction);
+  }
+};

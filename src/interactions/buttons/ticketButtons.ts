@@ -73,3 +73,10 @@ export async function handleTicketButtons(interaction: ButtonInteraction) {
     return;
   }
 }
+
+export default {
+  customIdRegex: /.*/,
+  execute: async (interaction: any) => {
+    return handleTicketButtons(interaction);
+  }
+};

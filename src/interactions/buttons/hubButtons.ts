@@ -43,3 +43,10 @@ export async function handleHubButton(interaction: ButtonInteraction) {
     }
   }
 }
+
+export default {
+  customIdRegex: /^hub_/,
+  execute: async (interaction: any) => {
+    return handleHubButton(interaction);
+  }
+};

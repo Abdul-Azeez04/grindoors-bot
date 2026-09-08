@@ -77,3 +77,10 @@ export async function handleServerManagementButtons(interaction: ButtonInteracti
     await interaction.showModal(modal);
   }
 }
+
+export default {
+  customIdRegex: /.*/,
+  execute: async (interaction: any) => {
+    return handleServerManagementButtons(interaction);
+  }
+};

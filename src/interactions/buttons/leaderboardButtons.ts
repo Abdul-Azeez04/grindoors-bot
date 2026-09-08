@@ -56,3 +56,10 @@ export async function handleLeaderboardButton(interaction: ButtonInteraction) {
     logger.error('Error handling leaderboard button:', error);
   }
 }
+
+export default {
+  customIdRegex: /^lb_/,
+  execute: async (interaction: any) => {
+    return handleLeaderboardButton(interaction);
+  }
+};

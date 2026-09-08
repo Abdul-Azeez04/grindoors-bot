@@ -33,3 +33,10 @@ export async function handleReportButton(interaction: ButtonInteraction) {
     await interaction.showModal(modal);
   }
 }
+
+export default {
+  customIdRegex: /.*/,
+  execute: async (interaction: any) => {
+    return handleReportButton(interaction);
+  }
+};
