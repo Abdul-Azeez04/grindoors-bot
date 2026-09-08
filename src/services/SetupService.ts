@@ -156,7 +156,7 @@ export class SetupService {
       const lbChannel = guild.channels.cache.find(c => c.name === 'leaderboards') as any;
       if (lbChannel && lbChannel.isTextBased()) {
         const { createLeaderboardPanel } = await import('../panels/LeaderboardPanel');
-        const lbData = createLeaderboardPanel();
+        const lbData = await createLeaderboardPanel(guild.id);
         await lbChannel.send(lbData);
         result.panelsDeployed.push('Leaderboard Panel');
       }
@@ -165,7 +165,7 @@ export class SetupService {
       const mintChannel = guild.channels.cache.find(c => c.name === 'mint-alerts') as any;
       if (mintChannel && mintChannel.isTextBased()) {
         const { createMintBoard } = await import('../panels/MintBoard');
-        const mintData = createMintBoard();
+        const mintData = createMintBoard([]);
         await mintChannel.send(mintData);
         result.panelsDeployed.push('Mint Board');
       }
