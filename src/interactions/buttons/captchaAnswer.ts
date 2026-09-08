@@ -27,7 +27,12 @@ export const execute = async (interaction: ButtonInteraction) => {
 
       // Assign Waiting Room role, remove Unverified
       const unverifiedRole = interaction.guild?.roles.cache.find(r => r.name === 'Unverified');
-      const waitingRoomRole = interaction.guild?.roles.cache.find(r => r.name === 'Waiting Room');
+      let waitingRoomRole = interaction.guild?.roles.cache.find(r => r.name === 'Waiting Room');
+
+      if (!waitingRoomRole && interaction.guild) {
+        waitingRoomRole = await interaction.guild.roles.create({ name: 'Waiting Room', color: '#e67e22' });
+        logger.info('Auto-created missing Waiting Room role');
+      }
 
       try {
         if (waitingRoomRole) {
