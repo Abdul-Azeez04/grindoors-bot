@@ -78,10 +78,19 @@ export class SetupService {
                 }
               ]);
             } else {
-              // ALL OTHER categories: Hidden from Unverified role
+              // ALL OTHER categories: Hidden from Unverified role, explicitly visible to Member role
               await catChannel.permissionOverwrites.edit(unverifiedRole.id, {
                 ViewChannel: false
               });
+              
+              const memberRole = guild.roles.cache.find(r => r.name === 'Member');
+              if (memberRole) {
+                await catChannel.permissionOverwrites.edit(memberRole.id, {
+                  ViewChannel: true,
+                  SendMessages: true,
+                  ReadMessageHistory: true
+                });
+              }
             }
           }
 
