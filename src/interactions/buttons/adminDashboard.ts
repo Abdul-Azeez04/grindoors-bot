@@ -50,30 +50,44 @@ export async function handleAdminDashboardButton(interaction: ButtonInteraction)
         for (const [id, ch] of channels) {
           if (!ch) continue;
           
-          // Delete categories we created
+          // Delete categories we created and all their children
           if (ch.type === ChannelType.GuildCategory && botCategories.includes(ch.name.toUpperCase())) {
-            // First delete all children
             const children = channels.filter(c => c && 'parentId' in c && c.parentId === ch.id);
             for (const [cid, child] of children) {
               if (child) {
                 try { await child.delete(); deleted++; } catch(e) { skipped.push(child.name); }
               }
             }
-            // Then delete the category
             try { await ch.delete(); deleted++; } catch(e) { skipped.push(ch.name); }
           }
         }
 
-        // Also delete any old default channels that conflict
-        const oldChannelNames = ['welcome-and-rules', 'welcome', 'verify', 'rules'];
+        // Try to disable Community features so we can delete protected channels
+        try {
+          await guild.edit({ features: guild.features.filter(f => f !== 'COMMUNITY') });
+        } catch(e) { /* might not have permission */ }
+
+        // Delete old default/protected channels
+        const oldChannelNames = ['welcome-and-rules', 'welcome', 'verify', 'rules', 'announcements'];
         const remainingChannels = await guild.channels.fetch();
         for (const [id, ch] of remainingChannels) {
-          if (ch && ch.type === ChannelType.GuildText && oldChannelNames.includes(ch.name)) {
-            try { await ch.delete(); deleted++; } catch(e) { skipped.push(ch.name); }
+          if (ch && oldChannelNames.includes(ch.name)) {
+            try { await ch.delete(); deleted++; } catch(e) { 
+              skipped.push(`${ch.name} (protected by Discord - go to Server Settings → Community → Disable Community to remove)`); 
+            }
           }
         }
 
-        let msg = `🧹 **Cleanup Complete!**\nDeleted ${deleted} channels/categories.`;
+        // Also clean up bot-created roles
+        const botRoleNames = ['Owner', 'Administrator', 'Moderator', 'Support', 'Game Master', 'Community Manager', 'Verified', 'Member', 'Waiting Room', 'Unverified', 'Muted'];
+        let rolesDeleted = 0;
+        for (const [id, role] of guild.roles.cache) {
+          if (botRoleNames.includes(role.name) && role.editable) {
+            try { await role.delete(); rolesDeleted++; } catch(e) { /* skip */ }
+          }
+        }
+
+        let msg = `🧹 **Cleanup Complete!**\nDeleted ${deleted} channels/categories and ${rolesDeleted} roles.`;
         if (skipped.length > 0) msg += `\n⚠️ Could not delete: ${skipped.join(', ')}`;
         await interaction.followUp({ content: msg });
         break;
@@ -250,11 +264,37 @@ export async function handleAdminDashboardButton(interaction: ButtonInteraction)
 
       // ──────────────── ACCESS CODES ────────────────
       case 'admin_access_codes': {
+        await interaction.deferReply({ ephemeral: true });
+        const { ActionRowBuilder: ARB, ButtonBuilder: BB, ButtonStyle: BS } = await import('discord.js');
+        
+        // Show current codes and generate option
+        let codeList = 'No access codes generated yet.';
+        try {
+          const { prisma } = await import('../../database/client');
+          const codes = await prisma.accessCode.findMany({
+            where: { guildId: guild.id },
+            orderBy: { createdAt: 'desc' },
+            take: 10
+          });
+          if (codes.length > 0) {
+            codeList = codes.map((c: any) => 
+              `\`${c.code}\` — Uses: ${c.uses}/${c.maxUses || '∞'} | ${c.isActive ? '✅ Active' : '❌ Expired'}`
+            ).join('\n');
+          }
+        } catch(e) { /* DB might not have table yet */ }
+
         const embed = new EmbedBuilder()
-          .setTitle('🔑 Access Codes')
+          .setTitle('🔑 Access Code Manager')
           .setColor(Colors.PRIMARY)
-          .setDescription('Access code system for gated entry.\n\n**Coming in Phase 2:**\n• Generate invite codes\n• Set code limits\n• Track code usage\n• Expire codes automatically');
-        await interaction.reply({ embeds: [embed], ephemeral: true });
+          .setDescription(`**Active Codes:**\n${codeList}`)
+          .setFooter({ text: 'Click below to generate a new code.' });
+        
+        const row = new ARB<any>().addComponents(
+          new BB().setCustomId('ac_generate').setLabel('🔑 Generate New Code').setStyle(BS.Success),
+          new BB().setCustomId('ac_generate_bulk').setLabel('📦 Generate 5 Codes').setStyle(BS.Primary)
+        );
+
+        await interaction.followUp({ embeds: [embed], components: [row] });
         break;
       }
 
