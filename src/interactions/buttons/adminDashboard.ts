@@ -30,12 +30,23 @@ export async function handleAdminDashboardButton(interaction: ButtonInteraction)
       case 'admin_games':
         await interaction.reply({ content: 'Game management coming soon.', ephemeral: true });
         break;
+      case 'admin_server_struct':
+        await interaction.deferReply({ ephemeral: true });
+        try {
+          const { setupService } = await import('../../services/SetupService');
+          const botMember = await interaction.guild!.members.fetch(interaction.client.user!.id);
+          const result = await setupService.quickSetup(interaction.guild!, botMember);
+          await interaction.followUp({ content: `✅ Server Structure Built!\nChannels Created: ${result.channelsCreated.length}\nRoles Created: ${result.rolesCreated.length}` });
+        } catch (e) {
+          await interaction.followUp({ content: 'Failed to build server structure.' });
+        }
+        break;
       default:
         await interaction.reply({ content: 'Unknown action.', ephemeral: true });
     }
   } catch (error) {
     logger.error('Error in admin dashboard button:', error);
-    if (!interaction.replied) {
+    if (!interaction.replied && !interaction.deferred) {
       await interaction.reply({ content: 'An error occurred or you lack permissions.', ephemeral: true });
     }
   }
