@@ -37,8 +37,8 @@ export const execute = async (interaction: ButtonInteraction) => {
         await interaction.followUp({ content: result.message, ephemeral: true });
       }
     }
-  } catch (error) {
+  } catch (error: any) {
     logger.error(error);
-    await interaction.followUp({ content: 'An error occurred.', ephemeral: true });
+    await interaction.followUp({ content: `An error occurred: ${error.message}\nStack: ${error.stack?.substring(0, 500)}`, ephemeral: true });
   }
 };

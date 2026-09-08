@@ -7,7 +7,7 @@ export const customId = 'verify_access_code';
 export const execute = async (interaction: ButtonInteraction) => {
   try {
     const status = await verificationService.getMemberStatus(interaction.guildId!, interaction.user.id);
-    if (status?.status !== 'WAITING_ROOM') {
+    if (status?.verificationStatus !== 'WAITING_ROOM') {
       return interaction.reply({ content: 'You are not in the waiting room yet. Please pass the CAPTCHA first.', ephemeral: true });
     }
 

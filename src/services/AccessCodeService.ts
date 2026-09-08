@@ -10,11 +10,11 @@ export class AccessCodeService {
         createdById: options.createdById,
         name: options.name,
         code,
-        maxUses: options.maxUses,
+        maxUses: options.maxUses ?? -1,
         expiresAt: options.expiresAt,
         roleId: options.roleId,
         notes: options.notes,
-        active: true,
+        isActive: true,
         currentUses: 0
       }
     });
@@ -22,7 +22,7 @@ export class AccessCodeService {
 
   async validateCode(guildId: string, code: string, userId: string) {
     const accessCode = await prisma.accessCode.findFirst({
-      where: { guildId, code, active: true }
+      where: { guildId, code, isActive: true }
     });
 
     if (!accessCode) {
@@ -33,7 +33,7 @@ export class AccessCodeService {
       return { valid: false, error: 'Invalid or expired access code.' };
     }
 
-    if (accessCode.maxUses !== null && accessCode.currentUses >= accessCode.maxUses) {
+    if (accessCode.maxUses !== -1 && accessCode.currentUses >= accessCode.maxUses) {
       return { valid: false, error: 'Invalid or expired access code.' };
     }
 
@@ -47,28 +47,27 @@ export class AccessCodeService {
         data: { currentUses: { increment: 1 } }
       }),
       prisma.accessCodeUsage.create({
-        data: { accessCodeId: codeId, userId: memberId }
+        data: { accessCodeId: codeId, memberId }
       })
     ]);
   }
 
   async getActiveCodes(guildId: string) {
     return await prisma.accessCode.findMany({
-      where: { guildId, active: true }
+      where: { guildId, isActive: true }
     });
   }
 
   async disableCode(codeId: number): Promise<void> {
     await prisma.accessCode.update({
       where: { id: codeId },
-      data: { active: false }
+      data: { isActive: false }
     });
   }
 
   async getCodeUsage(codeId: number) {
     return await prisma.accessCodeUsage.findMany({
-      where: { accessCodeId: codeId },
-      include: { user: true }
+      where: { accessCodeId: codeId }
     });
   }
 
