@@ -17,7 +17,7 @@ export async function handleServerManagementButtons(interaction: ButtonInteracti
     
     const embed = new EmbedBuilder()
       .setTitle('Server Structure')
-      .setColor(Colors.Primary)
+      .setColor(Colors.PRIMARY)
       .setDescription(`Total: ${stats.total}\nText: ${stats.text}\nVoice: ${stats.voice}\nCategories: ${stats.categories}\nEmpty: ${stats.empty}`);
 
     const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
@@ -37,7 +37,7 @@ export async function handleServerManagementButtons(interaction: ButtonInteracti
     
     const embed = new EmbedBuilder()
       .setTitle('Server Audit Report')
-      .setColor(Colors.Warning)
+      .setColor(Colors.WARNING)
       .setDescription(`**Score:** ${report.score}/100\n\n**Recommendations:**\n${report.recommendations.join('\n') || 'None'}`);
 
     const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
@@ -79,7 +79,7 @@ export async function handleServerManagementButtons(interaction: ButtonInteracti
 }
 
 export default {
-  customIdRegex: /.*/,
+  customIdRegex: /^admin_/,
   execute: async (interaction: any) => {
     return handleServerManagementButtons(interaction);
   }

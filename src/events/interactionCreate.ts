@@ -20,17 +20,26 @@ const event: EventHandler = {
           return false;
         });
 
-        if (!handler) return;
+        if (!handler) {
+          logger.warn(`No handler found for interaction: ${interaction.customId}`);
+          if (interaction.isRepliable()) {
+            await interaction.reply({ content: `⚙️ This feature (${interaction.customId}) is not yet connected.`, ephemeral: true }).catch(() => {});
+          }
+          return;
+        }
         await handler.execute(interaction);
       }
     } catch (error) {
       logger.error({ err: error }, 'Error handling interaction');
-      const embed = createErrorEmbed('An unexpected error occurred while executing this command.');
-      if (interaction.isRepliable() && !interaction.replied) {
-        await interaction.reply({ embeds: [embed], ephemeral: true }).catch(() => {});
-      } else if (interaction.isRepliable() && interaction.replied) {
-        await interaction.followUp({ embeds: [embed], ephemeral: true }).catch(() => {});
-      }
+      try {
+        if (interaction.isRepliable()) {
+          if (!interaction.replied && !interaction.deferred) {
+            await interaction.reply({ content: '❌ An error occurred.', ephemeral: true }).catch(() => {});
+          } else {
+            await interaction.followUp({ content: '❌ An error occurred.', ephemeral: true }).catch(() => {});
+          }
+        }
+      } catch(e) { /* already handled */ }
     }
   }
 };

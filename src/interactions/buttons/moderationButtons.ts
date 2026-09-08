@@ -56,7 +56,7 @@ export async function handleModerationButtons(interaction: ButtonInteraction) {
 }
 
 export default {
-  customIdRegex: /.*/,
+  customIdRegex: /^mod_/,
   execute: async (interaction: any) => {
     return handleModerationButtons(interaction);
   }

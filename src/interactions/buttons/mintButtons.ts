@@ -62,7 +62,7 @@ export async function handleMintButtons(interaction: ButtonInteraction) {
 }
 
 export default {
-  customIdRegex: /.*/,
+  customIdRegex: /^mint_/,
   execute: async (interaction: any) => {
     return handleMintButtons(interaction);
   }

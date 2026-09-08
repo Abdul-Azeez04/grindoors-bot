@@ -35,7 +35,7 @@ export async function handleReportButton(interaction: ButtonInteraction) {
 }
 
 export default {
-  customIdRegex: /.*/,
+  customIdRegex: /^report_create/,
   execute: async (interaction: any) => {
     return handleReportButton(interaction);
   }

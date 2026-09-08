@@ -14,7 +14,7 @@ export async function handleGMButtons(interaction: ButtonInteraction) {
   if (customId === 'admin_gm') {
     const embed = new EmbedBuilder()
       .setTitle('☀️ GM Manager')
-      .setColor(Colors.Primary)
+      .setColor(Colors.PRIMARY)
       .setDescription('Manage daily GM posts and quotes.');
 
     const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
@@ -45,7 +45,7 @@ export async function handleGMButtons(interaction: ButtonInteraction) {
     
     const embed = new EmbedBuilder()
       .setTitle('GM Quotes')
-      .setColor(Colors.Primary)
+      .setColor(Colors.PRIMARY)
       .setDescription(desc.substring(0, 4000));
       
     await interaction.reply({ embeds: [embed], ephemeral: true });
@@ -57,7 +57,7 @@ export async function handleGMButtons(interaction: ButtonInteraction) {
     
     const embed = new EmbedBuilder()
       .setTitle('☀️ Good Morning! (Preview)')
-      .setColor(Colors.Primary)
+      .setColor(Colors.PRIMARY)
       .setDescription(quote.text)
       .setFooter({ text: quote.author ? `- ${quote.author}` : 'Daily GM' });
       
@@ -72,7 +72,7 @@ export async function handleGMButtons(interaction: ButtonInteraction) {
 }
 
 export default {
-  customIdRegex: /.*/,
+  customIdRegex: /^gm_/,
   execute: async (interaction: any) => {
     return handleGMButtons(interaction);
   }
