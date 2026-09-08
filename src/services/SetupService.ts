@@ -1,9 +1,10 @@
-import { Guild, GuildMember, ChannelType } from 'discord.js';
+import { Guild, GuildMember, ChannelType, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
 import { channelService } from './ChannelService';
 import { roleService } from './RoleService';
 import { serverAuditService } from './ServerAuditService';
 import { prisma } from "../database/client";
 import { logger } from "../utils/logger";
+import { Colors } from '../config/constants';
 
 export interface SetupResult {
   channelsCreated: string[];
@@ -33,6 +34,12 @@ export class SetupService {
       const roleNames = ['Owner', 'Administrator', 'Moderator', 'Support', 'Game Master', 'Community Manager', 'Verified', 'Member', 'Waiting Room', 'Unverified', 'Muted'];
       for (const name of roleNames) {
         try {
+          // Skip if role already exists
+          const existing = guild.roles.cache.find(r => r.name === name);
+          if (existing) {
+            result.rolesCreated.push(`${name} (exists)`);
+            continue;
+          }
           const role = await roleService.createRole(guild, name);
           result.rolesCreated.push(role.name);
         } catch (e) {
@@ -44,6 +51,12 @@ export class SetupService {
       const structure = serverAuditService.generateRecommendedStructure();
       for (const category of structure.categories) {
         try {
+          // Skip if category already exists
+          const existingCat = guild.channels.cache.find(c => c.name.toUpperCase() === category.name.toUpperCase() && c.type === ChannelType.GuildCategory);
+          if (existingCat) {
+            result.channelsCreated.push(`${category.name} (exists)`);
+            continue;
+          }
           const catChannel = await channelService.createCategory(guild, category.name);
           for (const channelName of category.channels) {
             const ch = await channelService.createChannel(guild, channelName, ChannelType.GuildText, { category: catChannel.id });
@@ -54,7 +67,11 @@ export class SetupService {
         }
       }
 
-      const hubChannel = guild.channels.cache.find(c => c.name.includes('hub') || c.name.includes('welcome')) as any;
+      // Refresh the channel cache after creating channels
+      await guild.channels.fetch();
+
+      // 4. Deploy Community Hub panel
+      const hubChannel = guild.channels.cache.find(c => c.name.includes('welcome') || c.name.includes('general')) as any;
       if (hubChannel && hubChannel.isTextBased()) {
         const hubEmbed = new EmbedBuilder()
           .setTitle('🚀 GRINDOORS COMMUNITY HUB')
@@ -76,13 +93,13 @@ export class SetupService {
         result.panelsDeployed.push('Community Hub');
       }
 
+      // 5. Deploy Ticket panel
       const ticketChannel = guild.channels.cache.find(c => c.name.includes('support') || c.name.includes('ticket')) as any;
       if (ticketChannel && ticketChannel.isTextBased()) {
         const ticketEmbed = new EmbedBuilder()
           .setTitle('🎫 SUPPORT TICKETS')
-          .setColor(Colors.Dark) // Assuming this was fixed or exists, wait, let's use PRIMARY
+          .setColor(Colors.PRIMARY)
           .setDescription('Need help? Click below to open a private ticket with the Game Masters.');
-        ticketEmbed.setColor(Colors.PRIMARY);
         const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
           new ButtonBuilder().setCustomId('ticket_create').setLabel('Open Ticket').setStyle(ButtonStyle.Primary)
         );
