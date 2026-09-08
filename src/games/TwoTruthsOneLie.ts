@@ -31,7 +31,7 @@ export class TwoTruthsOneLie extends GameEngine {
     const embed = new EmbedBuilder()
       .setTitle('🤥 Two Truths and One Lie')
       .setDescription(`Find the lie among these three statements!`)
-      .setColor(Colors.Warning)
+      .setColor(Colors.WARNING)
       .setFooter({ text: `Game ID: ${this.gameId}` });
 
     const row = new ActionRowBuilder<ButtonBuilder>();

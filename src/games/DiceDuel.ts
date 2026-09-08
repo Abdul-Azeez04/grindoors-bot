@@ -18,7 +18,7 @@ export class DiceDuel extends GameEngine {
     const embed = new EmbedBuilder()
       .setTitle('🎲 Dice Duel')
       .setDescription(`Roll the dice! Highest roll wins.`)
-      .setColor(Colors.Info)
+      .setColor(Colors.PRIMARY)
       .setFooter({ text: `Game ID: ${this.gameId}` });
 
     const row = new ActionRowBuilder<ButtonBuilder>()

@@ -39,7 +39,7 @@ export class UnscrambleNFT extends GameEngine {
     const embed = new EmbedBuilder()
       .setTitle('🔠 Unscramble NFT Term')
       .setDescription(`Unscramble this word:\n**${scrambled}**`)
-      .setColor(Colors.Primary)
+      .setColor(Colors.PRIMARY)
       .setFooter({ text: `Game ID: ${this.gameId}` });
 
     const row = new ActionRowBuilder<ButtonBuilder>();

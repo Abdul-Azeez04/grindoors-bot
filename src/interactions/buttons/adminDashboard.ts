@@ -284,7 +284,7 @@ export async function handleAdminDashboardButton(interaction: ButtonInteraction)
           });
           if (codes.length > 0) {
             codeList = codes.map((c: any) => 
-              `\`${c.code}\` — Uses: ${c.uses}/${c.maxUses || '∞'} | ${c.isActive ? '✅ Active' : '❌ Expired'}`
+              `\`${c.code}\` — Uses: ${c.currentUses}/${c.maxUses || '∞'} | ${c.isActive ? '✅ Active' : '❌ Expired'}`
             ).join('\n');
           }
         } catch(e) { /* DB might not have table yet */ }

@@ -4,7 +4,7 @@ import { Colors } from '../config/constants';
 export function createMintBoard(mints: any[]) {
   const embed = new EmbedBuilder()
     .setTitle('💎 Mint Board')
-    .setColor(Colors.Primary);
+    .setColor(Colors.PRIMARY);
 
   if (mints.length === 0) {
     embed.setDescription('No mints scheduled.');

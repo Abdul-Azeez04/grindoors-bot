@@ -66,35 +66,60 @@ export class TicketService {
   }
 
   static async claimTicket(ticketId: number, staffId: string) {
-    await prisma.ticket.update({
-      where: { id: ticketId },
-      data: { status: 'CLAIMED', claimedById: staffId }
-    });
+    try {
+      await prisma.ticket.update({
+        where: { id: ticketId },
+        data: { status: 'CLAIMED', assignedToId: staffId }
+      });
+    } catch (error) {
+      logger.error(`Error claiming ticket: ${error}`);
+      throw error;
+    }
   }
 
   static async escalateTicket(ticketId: number) {
-    await prisma.ticket.update({
-      where: { id: ticketId },
-      data: { status: 'ESCALATED' }
-    });
+    try {
+      await prisma.ticket.update({
+        where: { id: ticketId },
+        data: { status: 'ESCALATED' }
+      });
+    } catch (error) {
+      logger.error(`Error escalating ticket: ${error}`);
+      throw error;
+    }
   }
 
-  static async closeTicket(ticketId: number, closedById: string) {
-    const ticket = await prisma.ticket.update({
-      where: { id: ticketId },
-      data: { status: 'CLOSED', closedById }
-    });
-    // In a real app we might fetch the channel and delete it or archive it.
-    return ticket;
+  static async closeTicket(ticketId: number) {
+    try {
+      const ticket = await prisma.ticket.update({
+        where: { id: ticketId },
+        data: { status: 'CLOSED', closedAt: new Date() }
+      });
+      // In a real app we might fetch the channel and delete it or archive it.
+      return ticket;
+    } catch (error) {
+      logger.error(`Error closing ticket: ${error}`);
+      throw error;
+    }
   }
 
   static async getOpenTickets(guildId: string) {
-    return prisma.ticket.findMany({
-      where: { guildId, status: { not: 'CLOSED' } }
-    });
+    try {
+      return await prisma.ticket.findMany({
+        where: { guildId, status: { not: 'CLOSED' } }
+      });
+    } catch (error) {
+      logger.error(`Error getting open tickets: ${error}`);
+      throw error;
+    }
   }
 
   static async getTicketById(ticketId: number) {
-    return prisma.ticket.findUnique({ where: { id: ticketId } });
+    try {
+      return await prisma.ticket.findUnique({ where: { id: ticketId } });
+    } catch (error) {
+      logger.error(`Error getting ticket by id: ${error}`);
+      throw error;
+    }
   }
 }

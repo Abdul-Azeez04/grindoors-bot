@@ -1,7 +1,7 @@
 import { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
 import { GameEngine } from './GameEngine';
 import { Colors } from '../config/constants';
-import nftTriviaData from './data/nftTrivia';
+import { nftTriviaData } from './data/nftTrivia';
 
 export class SpeedQuiz extends GameEngine {
     private question: any;

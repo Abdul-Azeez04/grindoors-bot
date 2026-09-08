@@ -1,6 +1,8 @@
-import { ButtonInteraction } from 'discord.js';
+import { ButtonInteraction, EmbedBuilder } from 'discord.js';
 import { GameManager } from '../../games/GameManager';
 import { logger } from '../../utils/logger';
+import { prisma } from '../../database/client';
+import { Colors } from '../../config/constants';
 
 export const handleGameButtons = async (interaction: ButtonInteraction) => {
   const customId = interaction.customId;
@@ -33,9 +35,26 @@ export const handleGameButtons = async (interaction: ButtonInteraction) => {
   // Other buttons
   switch(customId) {
     case 'game_leaderboard':
-      return interaction.reply({ content: 'Leaderboard coming soon!', ephemeral: true });
+      if (!interaction.guildId) return interaction.reply({ content: 'Must be used in a server', ephemeral: true });
+      try {
+        const topPlayers = await prisma.member.findMany({ 
+          where: { guildId: interaction.guildId }, 
+          orderBy: { totalGamesWon: 'desc' }, 
+          take: 10 
+        });
+        const embed = new EmbedBuilder()
+          .setTitle('🏆 Top 10 Game Players')
+          .setColor(Colors.PRIMARY)
+          .setDescription(topPlayers.length > 0 
+            ? topPlayers.map((p, i) => `**${i + 1}.** <@${p.discordId}> - ${p.totalGamesWon} Wins`).join('\n')
+            : 'No game data available yet.');
+        return interaction.reply({ embeds: [embed], ephemeral: true });
+      } catch (err) {
+        logger.error('Error fetching game leaderboard', err);
+        return interaction.reply({ content: 'Failed to fetch leaderboard.', ephemeral: true });
+      }
     case 'game_daily':
-      return interaction.reply({ content: 'Daily Challenge coming soon!', ephemeral: true });
+      return interaction.reply({ content: 'Head to the #game-lobby to start playing games!', ephemeral: true });
     default:
       logger.warn(`Unknown game button: ${customId}`);
       return interaction.reply({ content: 'Unknown action.', ephemeral: true });

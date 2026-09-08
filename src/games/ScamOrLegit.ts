@@ -25,7 +25,7 @@ export class ScamOrLegit extends GameEngine {
     const embed = new EmbedBuilder()
       .setTitle('🕵️ Scam or Legit?')
       .setDescription(`**Scenario:**\n${scenario.scenario}\n\nIs this a scam or a legitimate opportunity?`)
-      .setColor(Colors.Warning)
+      .setColor(Colors.WARNING)
       .setFooter({ text: `Game ID: ${this.gameId}` });
 
     const row = new ActionRowBuilder<ButtonBuilder>()

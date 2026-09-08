@@ -1,7 +1,7 @@
 import { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
 import { GameEngine } from './GameEngine';
 import { Colors } from '../config/constants';
-import flagsData from './data/flags';
+import { flagsData } from './data/flags';
 
 export class FlagPuzzle extends GameEngine {
     private oddOneOut: any;

@@ -40,8 +40,8 @@ export const handleGameSelect = async (interaction: StringSelectMenuInteraction)
 
   let game;
   switch (gameType) {
-    case 'flagguess': game = new FlagGuess(interaction.guildId!, channel.id); break;
-    case 'nfttrivia': game = new NFTTrivia(interaction.guildId!, channel.id); break;
+    case 'flagguess': case 'flag_guess': game = new FlagGuess(interaction.guildId!, channel.id); break;
+    case 'nfttrivia': case 'nft_trivia': game = new NFTTrivia(interaction.guildId!, channel.id); break;
     case 'coinflipwar': game = new CoinFlipWar(interaction.guildId!, channel.id); break;
     case 'speedquiz': game = new SpeedQuiz(interaction.guildId!, channel.id); break;
     case 'wordscramble': game = new WordScramble(interaction.guildId!, channel.id); break;

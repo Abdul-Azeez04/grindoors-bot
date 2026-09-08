@@ -19,7 +19,7 @@ export class CoinFlipWar extends GameEngine {
     const embed = new EmbedBuilder()
       .setTitle('🪙 Coin Flip War')
       .setDescription(`Will it be Heads or Tails? Choose your side!`)
-      .setColor(Colors.Info)
+      .setColor(Colors.PRIMARY)
       .setFooter({ text: `Game ID: ${this.gameId}` });
 
     const row = new ActionRowBuilder<ButtonBuilder>()

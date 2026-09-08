@@ -13,7 +13,7 @@ export class ReportService {
           category,
           description,
           targetId,
-          status: 'OPEN'
+          status: 'PENDING'
         }
       });
       return report;
@@ -24,36 +24,51 @@ export class ReportService {
   }
 
   static async getReports(guildId: string, status?: string) {
-    const whereClause: any = { guildId };
-    if (status) whereClause.status = status;
-    return prisma.report.findMany({ where: whereClause });
+    try {
+      const whereClause: any = { guildId };
+      if (status) whereClause.status = status;
+      return await prisma.report.findMany({ where: whereClause });
+    } catch (error) {
+      logger.error(`Error getting reports: ${error}`);
+      throw error;
+    }
   }
 
   static async updateReportStatus(reportId: number, status: string, handledById: string) {
-    await prisma.report.update({
-      where: { id: reportId },
-      data: { status, handledById }
-    });
+    try {
+      await prisma.report.update({
+        where: { id: reportId },
+        data: { status, handledById }
+      });
+    } catch (error) {
+      logger.error(`Error updating report status: ${error}`);
+      throw error;
+    }
   }
 
   static async sendReportToStaff(guild: Guild, report: any) {
-    const channel = guild.channels.cache.find(c => c.name === 'reports' || c.name === 'mod-logs');
-    if (channel && channel.isTextBased()) {
-      const embed = new EmbedBuilder()
-        .setTitle('🚨 New Report')
-        .addFields(
-          { name: 'Report ID', value: report.id.toString(), inline: true },
-          { name: 'Reporter', value: `<@${report.reporterId}>`, inline: true },
-          { name: 'Category', value: report.category, inline: true },
-          { name: 'Description', value: report.description }
-        )
-        .setColor(Colors.WARNING);
+    try {
+      const channel = guild.channels.cache.find(c => c.name === 'reports' || c.name === 'mod-logs');
+      if (channel && channel.isTextBased()) {
+        const embed = new EmbedBuilder()
+          .setTitle('🚨 New Report')
+          .addFields(
+            { name: 'Report ID', value: report.id.toString(), inline: true },
+            { name: 'Reporter', value: `<@${report.reporterId}>`, inline: true },
+            { name: 'Category', value: report.category, inline: true },
+            { name: 'Description', value: report.description }
+          )
+          .setColor(Colors.WARNING);
 
-      if (report.targetId) {
-        embed.addFields({ name: 'Target User', value: `<@${report.targetId}>`, inline: true });
+        if (report.targetId) {
+          embed.addFields({ name: 'Target User', value: `<@${report.targetId}>`, inline: true });
+        }
+
+        await channel.send({ embeds: [embed] });
       }
-
-      await channel.send({ embeds: [embed] });
+    } catch (error) {
+      logger.error(`Error sending report to staff: ${error}`);
+      throw error;
     }
   }
 }

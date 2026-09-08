@@ -1,11 +1,10 @@
 import { ButtonInteraction, ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder } from 'discord.js';
-import { requireAdmin } from '../../middleware/permissionGuard';
 import { RaidProtectionService } from '../../services/RaidProtectionService';
 
 export async function handleModerationButtons(interaction: ButtonInteraction) {
   if (!interaction.customId.startsWith('mod_')) return;
   
-  if (!requireAdmin(interaction.member)) {
+  if (!interaction.memberPermissions?.has('Administrator')) {
     return interaction.reply({ content: 'You do not have permission to use moderation tools.', ephemeral: true });
   }
 

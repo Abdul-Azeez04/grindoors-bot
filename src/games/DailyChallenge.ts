@@ -18,7 +18,7 @@ export class DailyChallenge extends GameEngine {
     const embed = new EmbedBuilder()
       .setTitle('📅 Daily Challenge')
       .setDescription('Claim your daily bonus XP! Come back tomorrow for more.')
-      .setColor(Colors.Success)
+      .setColor(Colors.SUCCESS)
       .setFooter({ text: `Game ID: ${this.gameId}` });
 
     const row = new ActionRowBuilder<ButtonBuilder>()

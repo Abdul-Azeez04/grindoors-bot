@@ -20,16 +20,17 @@ export class AnalyticsService {
   static async getOverview(guildId: string): Promise<Analytics> {
     try {
       const totalMembers = await prisma.member.count({ where: { guildId } });
-      const verifiedMembers = await prisma.member.count({ where: { guildId, isVerified: true } });
+      const verifiedMembers = await prisma.member.count({ where: { guildId, verificationStatus: 'VERIFIED' } });
       const waitingMembers = totalMembers - verifiedMembers;
+      const bannedMembers = await prisma.member.count({ where: { guildId, isBanned: true } });
       
       const xpAgg = await prisma.member.aggregate({
         where: { guildId },
-        _sum: { xp: true, totalGamesPlayed: true, warningsCount: true }
+        _sum: { xp: true, totalGamesPlayed: true, warningCount: true }
       });
       const totalXPGenerated = xpAgg._sum.xp || 0;
       const gamesPlayed = xpAgg._sum.totalGamesPlayed || 0;
-      const warningsIssued = xpAgg._sum.warningsCount || 0;
+      const warningsIssued = xpAgg._sum.warningCount || 0;
 
       const ticketsOpened = await prisma.ticket.count({ where: { guildId, status: 'OPEN' } });
       const ticketsClosed = await prisma.ticket.count({ where: { guildId, status: 'CLOSED' } });
@@ -40,15 +41,15 @@ export class AnalyticsService {
         where: { guildId, action: { in: ['BAN', 'KICK', 'WARN', 'MUTE'] } }
       });
 
-      const mintsScheduled = await prisma.mintEvent.count({
-        where: { guildId, status: 'SCHEDULED' }
+      const mintsScheduled = await prisma.mint.count({
+        where: { guildId, status: 'UPCOMING' }
       });
 
       return {
         totalMembers,
         verifiedMembers,
         waitingMembers,
-        bannedMembers: 0, // Placeholder
+        bannedMembers,
         totalXPGenerated,
         gamesPlayed,
         ticketsOpened,

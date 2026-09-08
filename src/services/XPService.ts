@@ -1,5 +1,4 @@
 import { prisma } from "../database/client";
-import { Colors } from '../config/constants';
 import { logger } from "../utils/logger";
 
 export const DEFAULT_LEVELS = [
@@ -27,12 +26,13 @@ export class XPService {
       const member = await prisma.member.upsert({
         where: { discordId_guildId: { discordId: memberId, guildId } },
         update: { xp: { increment: amount } },
-        create: { discordId: memberId, guildId, xp: amount, level: 1 }
+        create: { discordId: memberId, guildId, username: 'Unknown', joinedAt: new Date(), xp: amount, level: 1 }
       });
 
       await prisma.xPTransaction.create({
         data: {
-          memberId: member.id,
+          guildId,
+          memberId: memberId,
           amount,
           source,
           description: description || null
@@ -46,7 +46,7 @@ export class XPService {
       if (newLevel > oldLevel) {
         leveledUp = true;
         await prisma.member.update({
-          where: { id: member.id },
+          where: { discordId_guildId: { discordId: memberId, guildId } },
           data: { level: newLevel }
         });
       }
@@ -69,13 +69,14 @@ export class XPService {
       const { level: newLevel } = this.getLevelForXP(newXP);
 
       await prisma.member.update({
-        where: { id: member.id },
+        where: { discordId_guildId: { discordId: memberId, guildId } },
         data: { xp: newXP, level: newLevel }
       });
 
       await prisma.xPTransaction.create({
         data: {
-          memberId: member.id,
+          guildId,
+          memberId: memberId,
           amount: -amount,
           source: 'ADMIN',
           description: reason

@@ -25,7 +25,7 @@ export class TriviaStreak extends GameEngine {
     const embed = new EmbedBuilder()
       .setTitle('🔥 Trivia Streak!')
       .setDescription(`**${questionData.question}**\n\nKeep answering correctly to build your streak!`)
-      .setColor(Colors.Primary)
+      .setColor(Colors.PRIMARY)
       .setFooter({ text: `Game ID: ${this.gameId}` });
 
     const row = new ActionRowBuilder<ButtonBuilder>();

@@ -1,5 +1,3 @@
-import svgCaptcha from 'svg-captcha';
-
 interface CaptchaData {
   text: string;
   attempts: number;

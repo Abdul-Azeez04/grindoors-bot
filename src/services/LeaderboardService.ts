@@ -71,7 +71,7 @@ export class LeaderboardService {
         _sum: { amount: true },
         where: {
           createdAt: { gte: oneWeekAgo },
-          member: { guildId },
+          guildId,
           amount: { gt: 0 }
         },
         orderBy: {
@@ -82,11 +82,11 @@ export class LeaderboardService {
 
       const memberIds = transactions.map((t) => t.memberId);
       const members = await prisma.member.findMany({
-        where: { id: { in: memberIds } }
+        where: { guildId, discordId: { in: memberIds } }
       });
 
       return transactions.map((t) => {
-        const member = members.find((m) => m.id === t.memberId);
+        const member = members.find((m) => m.discordId === t.memberId);
         return {
           discordId: member?.discordId || 'Unknown',
           username: member?.username || 'Unknown',

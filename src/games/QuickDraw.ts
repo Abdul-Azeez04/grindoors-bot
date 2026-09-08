@@ -31,7 +31,7 @@ export class QuickDraw extends GameEngine {
     const embed = new EmbedBuilder()
       .setTitle('🎨 Quick Draw (Emoji Match)')
       .setDescription(`Find the emoji combination that best matches:\n**${prompt.word}**`)
-      .setColor(Colors.Primary)
+      .setColor(Colors.PRIMARY)
       .setFooter({ text: `Game ID: ${this.gameId}` });
 
     const row = new ActionRowBuilder<ButtonBuilder>();

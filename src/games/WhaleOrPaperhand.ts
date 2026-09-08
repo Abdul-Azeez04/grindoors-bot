@@ -25,7 +25,7 @@ export class WhaleOrPaperhand extends GameEngine {
     const embed = new EmbedBuilder()
       .setTitle('🐋 Whale or 📄 Paperhand?')
       .setDescription(`**Scenario:**\n${scenario.scenario}\n\nWhat kind of behavior is this?`)
-      .setColor(Colors.Info)
+      .setColor(Colors.PRIMARY)
       .setFooter({ text: `Game ID: ${this.gameId}` });
 
     const row = new ActionRowBuilder<ButtonBuilder>()

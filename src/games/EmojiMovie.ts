@@ -1,7 +1,7 @@
 import { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
 import { GameEngine } from './GameEngine';
 import { Colors } from '../config/constants';
-import puzzlesData from './data/puzzlesData';
+import { moviesData as puzzlesData } from './data/puzzlesData';
 
 export class EmojiMovie extends GameEngine {
     private puzzle: any;

@@ -18,7 +18,7 @@ export class Rumble extends GameEngine {
     const embed = new EmbedBuilder()
       .setTitle('⚔️ Rumble! Multiplayer Elimination')
       .setDescription('Join the rumble! May the best player win. Lobby closes in 30 seconds.')
-      .setColor(Colors.Primary)
+      .setColor(Colors.PRIMARY)
       .setFooter({ text: `Game ID: ${this.gameId}` });
 
     const row = new ActionRowBuilder<ButtonBuilder>()

@@ -25,7 +25,7 @@ export class NFTTrivia extends GameEngine {
     const embed = new EmbedBuilder()
       .setTitle('🧠 NFT Trivia Time!')
       .setDescription(`**${questionData.question}**`)
-      .setColor(Colors.Primary)
+      .setColor(Colors.PRIMARY)
       .setFooter({ text: `Game ID: ${this.gameId} | You have 30 seconds!` });
 
     const row = new ActionRowBuilder<ButtonBuilder>();

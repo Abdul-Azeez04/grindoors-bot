@@ -1,9 +1,16 @@
-import { ButtonInteraction } from 'discord.js';
+import { ButtonInteraction, EmbedBuilder } from 'discord.js';
 import { logger } from "../../utils/logger";
+import { TicketService } from '../../services/TicketService';
+import { createGameLobby } from '../../panels/GameLobby';
+import { createLeaderboardPanel } from '../../panels/LeaderboardPanel';
+import { createMintBoard } from '../../panels/MintBoard';
+import { prisma } from '../../database/client';
+import { Colors } from '../../config/constants';
 
 export async function handleHubButton(interaction: ButtonInteraction) {
   try {
     const customId = interaction.customId;
+    const guild = interaction.guild!;
     
     switch (customId) {
       case 'hub_verify': {
@@ -12,29 +19,70 @@ export async function handleHubButton(interaction: ButtonInteraction) {
         break;
       }
       case 'hub_support':
-        await interaction.reply({ content: 'Ticket system would open here.', ephemeral: true });
+        try {
+          const channel = await TicketService.createTicket(interaction.guildId!, interaction.user.id, 'GENERAL', guild);
+          await interaction.reply({ content: `Ticket created: <#${channel.id}>`, ephemeral: true });
+        } catch (err) {
+          await interaction.reply({ content: 'Failed to create ticket.', ephemeral: true });
+        }
         break;
-      case 'hub_games':
-        await interaction.reply({ content: 'Game lobby would open here.', ephemeral: true });
+      case 'hub_games': {
+        const gameLobby = createGameLobby();
+        await interaction.reply({ embeds: gameLobby.embeds, components: gameLobby.components, ephemeral: true });
         break;
-      case 'hub_leaderboard':
-        await interaction.reply({ content: 'Leaderboard loading...', ephemeral: true });
+      }
+      case 'hub_leaderboard': {
+        const leaderboard = await createLeaderboardPanel(guild.id);
+        await interaction.reply({ embeds: [leaderboard], ephemeral: true });
         break;
-      case 'hub_mints':
-        await interaction.reply({ content: 'Mints page would open here.', ephemeral: true });
+      }
+      case 'hub_mints': {
+        const mintBoard = createMintBoard([]);
+        await interaction.reply({ embeds: [mintBoard], ephemeral: true });
         break;
-      case 'hub_rules':
-        await interaction.reply({ content: 'Server rules...', ephemeral: true });
+      }
+      case 'hub_rules': {
+        const rulesEmbed = new EmbedBuilder()
+          .setTitle('📜 Server Rules')
+          .setColor(Colors.PRIMARY)
+          .setDescription('1. Be respectful to everyone.\n2. No spamming or self-promotion outside designated channels.\n3. Do not share malicious links or scams.\n4. Keep NSFW content out of the server.\n5. Follow Discord TOS.');
+        await interaction.reply({ embeds: [rulesEmbed], ephemeral: true });
         break;
-      case 'hub_profile':
-        await interaction.reply({ content: 'Use /profile to view your profile.', ephemeral: true });
+      }
+      case 'hub_profile': {
+        const memberRec = await prisma.member.findUnique({
+          where: { discordId_guildId: { discordId: interaction.user.id, guildId: guild.id } }
+        });
+        if (memberRec) {
+          const profileEmbed = new EmbedBuilder()
+            .setTitle(`${interaction.user.username}'s Profile`)
+            .setColor(Colors.PRIMARY)
+            .addFields(
+              { name: 'Level', value: `${memberRec.level}`, inline: true },
+              { name: 'XP', value: `${memberRec.xp}`, inline: true },
+              { name: 'Games Won', value: `${memberRec.totalGamesWon}`, inline: true }
+            )
+            .setThumbnail(interaction.user.displayAvatarURL());
+          await interaction.reply({ embeds: [profileEmbed], ephemeral: true });
+        } else {
+          await interaction.reply({ content: 'Profile not found. Send some messages to register!', ephemeral: true });
+        }
         break;
+      }
       case 'hub_daily':
-        await interaction.reply({ content: 'Daily challenge started.', ephemeral: true });
+        await interaction.reply({ content: 'Say GM in #gm to claim your daily streak!', ephemeral: true });
         break;
-      case 'hub_stats':
-        await interaction.reply({ content: 'Community stats...', ephemeral: true });
+      case 'hub_stats': {
+        const statsEmbed = new EmbedBuilder()
+          .setTitle('📊 Server Stats')
+          .setColor(Colors.PRIMARY)
+          .addFields(
+            { name: 'Members', value: `${guild.memberCount}`, inline: true },
+            { name: 'Channels', value: `${guild.channels.cache.size}`, inline: true }
+          );
+        await interaction.reply({ embeds: [statsEmbed], ephemeral: true });
         break;
+      }
       default:
         await interaction.reply({ content: 'Unknown action.', ephemeral: true });
     }

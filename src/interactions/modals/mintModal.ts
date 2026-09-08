@@ -42,4 +42,4 @@ export async function handleMintModal(interaction: ModalSubmitInteraction) {
     }
   }
 }
-export default { customIdRegex: /^modal_mint/, execute: async (interaction: any) => { return handleMintModal(interaction); } };
+export default { customIdRegex: /^modal_(?:add_)?mint/, execute: async (interaction: any) => { return handleMintModal(interaction); } };

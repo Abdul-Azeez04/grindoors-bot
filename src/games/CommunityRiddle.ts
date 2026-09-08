@@ -1,7 +1,7 @@
 import { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
 import { GameEngine } from './GameEngine';
 import { Colors } from '../config/constants';
-import { puzzlesData } from './data/puzzlesData';
+import { riddlesData as puzzlesData } from './data/puzzlesData';
 
 export class CommunityRiddle extends GameEngine {
   private correctIndex: number = 0;
@@ -28,7 +28,7 @@ export class CommunityRiddle extends GameEngine {
     const embed = new EmbedBuilder()
       .setTitle('🤔 Community Riddle')
       .setDescription(`**Riddle:**\n${riddle.emojis}`)
-      .setColor(Colors.Primary)
+      .setColor(Colors.PRIMARY)
       .setFooter({ text: `Game ID: ${this.gameId}` });
 
     const row = new ActionRowBuilder<ButtonBuilder>();

@@ -79,9 +79,14 @@ export class RoleService {
   }
 
   async getDailyRoles(guildId: string): Promise<any[]> {
-    return prisma.roleConfig.findMany({
-      where: { guildId, isDaily: true }
-    });
+    try {
+      return await prisma.roleConfig.findMany({
+        where: { guildId, isDailyRole: true }
+      });
+    } catch (error) {
+      logger.error(`Error getting daily roles: ${error}`);
+      throw error;
+    }
   }
 
   async rotateDailyRoles(guild: Guild): Promise<void> {
