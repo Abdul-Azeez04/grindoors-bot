@@ -8,7 +8,7 @@ const event: EventHandler = {
   once: false,
   execute: async (member: GuildMember) => {
     try {
-      await verificationService.startVerification(member.guild.id, member.id);
+      await verificationService.startVerification(member.guild.id, member.id, member.user.username);
       const unverifiedRole = member.guild.roles.cache.find(r => r.name === 'Unverified');
       if (unverifiedRole) {
         await member.roles.add(unverifiedRole);

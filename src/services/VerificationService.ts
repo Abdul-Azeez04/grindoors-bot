@@ -1,38 +1,38 @@
 import { prisma } from '../database/client';
 
 export class VerificationService {
-  async startVerification(guildId: string, userId: string): Promise<void> {
+  async startVerification(guildId: string, discordId: string, username: string = 'Unknown'): Promise<void> {
     await prisma.member.upsert({
-      where: { guildId_userId: { guildId, userId } },
-      update: { status: 'UNVERIFIED' },
-      create: { guildId, userId, status: 'UNVERIFIED' }
+      where: { discordId_guildId: { guildId, discordId } },
+      update: { verificationStatus: 'UNVERIFIED' },
+      create: { guildId, discordId, username, verificationStatus: 'UNVERIFIED', joinedAt: new Date() }
     });
   }
 
-  async completeCaptcha(guildId: string, userId: string): Promise<void> {
+  async completeCaptcha(guildId: string, discordId: string): Promise<void> {
     await prisma.member.update({
-      where: { guildId_userId: { guildId, userId } },
-      data: { status: 'CAPTCHA_PASSED' }
+      where: { discordId_guildId: { guildId, discordId } },
+      data: { verificationStatus: 'CAPTCHA_PASSED' }
     });
   }
 
-  async moveToWaitingRoom(guildId: string, userId: string): Promise<void> {
+  async moveToWaitingRoom(guildId: string, discordId: string): Promise<void> {
     await prisma.member.update({
-      where: { guildId_userId: { guildId, userId } },
-      data: { status: 'WAITING_ROOM' }
+      where: { discordId_guildId: { guildId, discordId } },
+      data: { verificationStatus: 'WAITING_ROOM' }
     });
   }
 
-  async completeVerification(guildId: string, userId: string): Promise<void> {
+  async completeVerification(guildId: string, discordId: string): Promise<void> {
     await prisma.member.update({
-      where: { guildId_userId: { guildId, userId } },
-      data: { status: 'VERIFIED', verifiedAt: new Date() }
+      where: { discordId_guildId: { guildId, discordId } },
+      data: { verificationStatus: 'VERIFIED', verifiedAt: new Date() }
     });
   }
 
-  async getMemberStatus(guildId: string, userId: string) {
+  async getMemberStatus(guildId: string, discordId: string) {
     return await prisma.member.findUnique({
-      where: { guildId_userId: { guildId, userId } }
+      where: { discordId_guildId: { guildId, discordId } }
     });
   }
 }
