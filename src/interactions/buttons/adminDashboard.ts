@@ -44,38 +44,39 @@ export async function handleAdminDashboardButton(interaction: ButtonInteraction)
         let deleted = 0;
         const skipped: string[] = [];
 
-        // Delete ALL bot-created channels and categories
-        const botCategories = ['VERIFICATION', 'INFORMATION', 'COMMUNITY', 'NFT', 'GAMES', 'SUPPORT', 'STAFF'];
-        
-        for (const [id, ch] of channels) {
-          if (!ch) continue;
-          
-          // Delete categories we created and all their children
-          if (ch.type === ChannelType.GuildCategory && botCategories.includes(ch.name.toUpperCase())) {
-            const children = channels.filter(c => c && 'parentId' in c && c.parentId === ch.id);
-            for (const [cid, child] of children) {
-              if (child) {
-                try { await child.delete(); deleted++; } catch(e) { skipped.push(child.name); }
-              }
-            }
-            try { await ch.delete(); deleted++; } catch(e) { skipped.push(ch.name); }
-          }
-        }
-
         // Try to disable Community features so we can delete protected channels
         try {
           await guild.edit({ features: guild.features.filter(f => f !== 'COMMUNITY') });
         } catch(e) { /* might not have permission */ }
 
-        // Delete old default/protected channels
-        const oldChannelNames = ['welcome-and-rules', 'welcome', 'verify', 'rules', 'announcements'];
+        // Nuclear wipe: Delete ALL channels and categories except the one we are currently in
+        const currentChannelId = interaction.channelId;
+        
+        // Delete all non-category channels first
+        for (const [id, ch] of channels) {
+          if (!ch || ch.id === currentChannelId || ch.type === ChannelType.GuildCategory) continue;
+          try { await ch.delete(); deleted++; } catch(e) { /* handled later */ }
+        }
+
+        // Now delete all categories
+        for (const [id, ch] of channels) {
+          if (!ch || ch.id === currentChannelId || ch.type !== ChannelType.GuildCategory) continue;
+          try { await ch.delete(); deleted++; } catch(e) {
+            if (!skipped.includes(ch.name)) skipped.push(ch.name);
+          }
+        }
+        
+        // Double check for any left overs (like protected channels)
         const remainingChannels = await guild.channels.fetch();
         for (const [id, ch] of remainingChannels) {
-          if (ch && oldChannelNames.includes(ch.name)) {
-            try { await ch.delete(); deleted++; } catch(e) { 
-              skipped.push(`${ch.name} (protected by Discord - go to Server Settings → Community → Disable Community to remove)`); 
-            }
-          }
+           if (!ch || ch.id === currentChannelId) continue;
+           if (!skipped.includes(ch.name)) {
+             if (ch.name === 'welcome-and-rules' || ch.name === 'announcements') {
+               skipped.push(`${ch.name} (Protected by Discord Community Settings)`);
+             } else {
+               skipped.push(ch.name);
+             }
+           }
         }
 
         // Also clean up bot-created roles
