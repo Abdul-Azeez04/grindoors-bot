@@ -25,6 +25,8 @@ export default {
             data: {
               code,
               guildId: interaction.guildId!,
+              createdById: interaction.user.id,
+              name: `Access Code`,
               maxUses: 10,
               isActive: true,
             }
@@ -57,6 +59,8 @@ export default {
               data: {
                 code,
                 guildId: interaction.guildId!,
+                createdById: interaction.user.id,
+                name: `Bulk Code`,
                 maxUses: 10,
                 isActive: true,
               }
