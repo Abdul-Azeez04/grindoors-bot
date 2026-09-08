@@ -24,10 +24,20 @@ export const execute = async (interaction: ModalSubmitInteraction) => {
     const member = await interaction.guild?.members.fetch(interaction.user.id);
     
     if (member) {
-      const unverifiedRole = interaction.guild?.roles.cache.find(r => r.name === 'Unverified');
-      const waitingRoomRole = interaction.guild?.roles.cache.find(r => r.name === 'Waiting Room');
-      const memberRole = interaction.guild?.roles.cache.find(r => r.name === 'Member');
-      const verifiedRole = interaction.guild?.roles.cache.find(r => r.name === 'Verified');
+      let unverifiedRole = interaction.guild?.roles.cache.find(r => r.name === 'Unverified');
+      let waitingRoomRole = interaction.guild?.roles.cache.find(r => r.name === 'Waiting Room');
+      let memberRole = interaction.guild?.roles.cache.find(r => r.name === 'Member');
+      let verifiedRole = interaction.guild?.roles.cache.find(r => r.name === 'Verified');
+
+      // Auto-create roles if the server was wiped
+      if (!memberRole && interaction.guild) {
+        memberRole = await interaction.guild.roles.create({ name: 'Member', color: '#3498db' });
+        logger.info('Auto-created missing Member role');
+      }
+      if (!verifiedRole && interaction.guild) {
+        verifiedRole = await interaction.guild.roles.create({ name: 'Verified', color: '#2ecc71' });
+        logger.info('Auto-created missing Verified role');
+      }
 
       logger.info(`Role assignment for ${member.user.tag}: Unverified=${!!unverifiedRole}, WaitingRoom=${!!waitingRoomRole}, Member=${!!memberRole}, Verified=${!!verifiedRole}`);
 
