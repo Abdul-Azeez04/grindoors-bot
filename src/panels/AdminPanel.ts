@@ -4,7 +4,7 @@ import { Colors } from '../config/constants';
 export function createAdminPanel() {
   const embed = new EmbedBuilder()
     .setTitle('⚙️ ADMIN CONTROL CENTER')
-    .setColor(Colors.Dark)
+    .setColor(Colors.PRIMARY)
     .setDescription('Select an administrative tool below to manage your server.');
 
   const row1 = new ActionRowBuilder<ButtonBuilder>().addComponents(

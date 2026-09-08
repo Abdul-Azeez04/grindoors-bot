@@ -1,7 +1,7 @@
 import { Interaction } from 'discord.js';
 import { EventHandler } from '../types';
 import { logger } from '../utils/logger';
-import { errorEmbed } from '../utils/embeds';
+import { createErrorEmbed } from '../utils/embeds';
 import { Bot } from '../bot';
 
 const event: EventHandler = {
@@ -25,7 +25,7 @@ const event: EventHandler = {
       }
     } catch (error) {
       logger.error({ err: error }, 'Error handling interaction');
-      const embed = errorEmbed('Error', 'An unexpected error occurred while executing this command.');
+      const embed = createErrorEmbed('An unexpected error occurred while executing this command.');
       if (interaction.isRepliable() && !interaction.replied) {
         await interaction.reply({ embeds: [embed], ephemeral: true }).catch(() => {});
       } else if (interaction.isRepliable() && interaction.replied) {
