@@ -39,8 +39,8 @@ export const execute = async (interaction: ButtonInteraction) => {
       files: [attachment],
       components: [row]
     });
-  } catch (error) {
+  } catch (error: any) {
     logger.error(error);
-    await interaction.editReply('An error occurred during verification.');
+    await interaction.editReply(`An error occurred during verification: ${error.message}\nStack: ${error.stack?.substring(0, 500)}`);
   }
 };
