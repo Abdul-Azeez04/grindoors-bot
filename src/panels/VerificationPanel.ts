@@ -5,7 +5,7 @@ export function createVerificationPanel() {
   const embed = new EmbedBuilder()
     .setTitle('🔐 VERIFICATION')
     .setDescription('Welcome! To gain access to the rest of the server, please complete the verification process.')
-    .setColor(Colors.DARK)
+    .setColor(Colors.PRIMARY)
     .addFields([
       { name: 'Step 1', value: 'Click the VERIFY ACCOUNT button and solve the CAPTCHA.' },
       { name: 'Step 2', value: 'If required, click ENTER ACCESS CODE to submit your invite code.' }

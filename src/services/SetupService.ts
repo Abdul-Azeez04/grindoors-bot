@@ -58,6 +58,33 @@ export class SetupService {
             continue;
           }
           const catChannel = await channelService.createCategory(guild, category.name);
+          
+          // Basic permission setup:
+          const { PermissionsBitField } = await import('discord.js');
+          const unverifiedRole = guild.roles.cache.find(r => r.name === 'Unverified');
+          
+          if (unverifiedRole) {
+            if (category.name === 'VERIFICATION') {
+              // VERIFICATION category: Visible to Unverified, hidden from everyone else
+              await catChannel.permissionOverwrites.set([
+                {
+                  id: guild.roles.everyone.id,
+                  deny: [PermissionsBitField.Flags.ViewChannel],
+                },
+                {
+                  id: unverifiedRole.id,
+                  allow: [PermissionsBitField.Flags.ViewChannel, PermissionsBitField.Flags.ReadMessageHistory],
+                  deny: [PermissionsBitField.Flags.SendMessages],
+                }
+              ]);
+            } else {
+              // ALL OTHER categories: Hidden from Unverified role
+              await catChannel.permissionOverwrites.edit(unverifiedRole.id, {
+                ViewChannel: false
+              });
+            }
+          }
+
           for (const channelName of category.channels) {
             const ch = await channelService.createChannel(guild, channelName, ChannelType.GuildText, { category: catChannel.id });
             result.channelsCreated.push(ch.name);
@@ -105,6 +132,15 @@ export class SetupService {
         );
         await ticketChannel.send({ embeds: [ticketEmbed], components: [row] });
         result.panelsDeployed.push('Ticket Panel');
+      }
+
+      // 6. Deploy Verification panel
+      const verifyChannel = guild.channels.cache.find(c => c.name === 'verify') as any;
+      if (verifyChannel && verifyChannel.isTextBased()) {
+        const { createVerificationPanel } = await import('../panels/VerificationPanel');
+        const verifyPanelData = createVerificationPanel();
+        await verifyChannel.send(verifyPanelData);
+        result.panelsDeployed.push('Verification Panel');
       }
 
     } catch (error) {
