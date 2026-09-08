@@ -51,13 +51,11 @@ export class SetupService {
       const structure = serverAuditService.generateRecommendedStructure();
       for (const category of structure.categories) {
         try {
-          // Skip if category already exists
-          const existingCat = guild.channels.cache.find(c => c.name.toUpperCase() === category.name.toUpperCase() && c.type === ChannelType.GuildCategory);
-          if (existingCat) {
-            result.channelsCreated.push(`${category.name} (exists)`);
-            continue;
+          let catChannel = guild.channels.cache.find(c => c.name.toUpperCase() === category.name.toUpperCase() && c.type === ChannelType.GuildCategory) as any;
+          if (!catChannel) {
+            catChannel = await channelService.createCategory(guild, category.name);
+            result.channelsCreated.push(`Category: ${category.name}`);
           }
-          const catChannel = await channelService.createCategory(guild, category.name);
           
           // Basic permission setup:
           const { PermissionsBitField } = await import('discord.js');
@@ -95,8 +93,11 @@ export class SetupService {
           }
 
           for (const channelName of category.channels) {
-            const ch = await channelService.createChannel(guild, channelName, ChannelType.GuildText, { category: catChannel.id });
-            result.channelsCreated.push(ch.name);
+            const existingCh = guild.channels.cache.find(c => c.name === channelName && c.parentId === catChannel.id);
+            if (!existingCh) {
+              const ch = await channelService.createChannel(guild, channelName, ChannelType.GuildText, { category: catChannel.id });
+              result.channelsCreated.push(ch.name);
+            }
           }
         } catch (e) {
           result.errors.push(`Failed to create category/channels: ${category.name}`);
