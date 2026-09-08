@@ -8,6 +8,14 @@ const event: EventHandler = {
   once: false,
   execute: async (guild: Guild) => {
     logger.info(`Joined new guild: ${guild.name} (${guild.id})`);
+    
+    // Register guild in the database to prevent Foreign Key failures
+    const { prisma } = require('../database/client');
+    await prisma.guild.upsert({
+      where: { id: guild.id },
+      create: { id: guild.id, name: guild.name },
+      update: { name: guild.name }
+    }).catch((err: any) => logger.error(`Failed to register guild in DB: ${err.message}`));
 
     let targetChannel = guild.systemChannel;
     if (!targetChannel || !targetChannel.isTextBased()) {
