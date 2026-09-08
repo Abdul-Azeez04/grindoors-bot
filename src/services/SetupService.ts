@@ -92,7 +92,7 @@ export class SetupService {
 
     } catch (error) {
       logger.error('Error during quick setup:', error);
-      result.errors.push('Critical setup failure.');
+      result.errors.push(`Critical Setup Error: ${error instanceof Error ? error.message : String(error)}`);
     }
 
     return result;

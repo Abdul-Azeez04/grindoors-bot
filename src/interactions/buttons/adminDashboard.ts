@@ -27,8 +27,26 @@ export async function handleAdminDashboardButton(interaction: ButtonInteraction)
       case 'admin_xp':
         await interaction.reply({ content: 'XP config coming soon.', ephemeral: true });
         break;
-      case 'admin_games':
-        await interaction.reply({ content: 'Game management coming soon.', ephemeral: true });
+      case 'admin_cleanup':
+        await interaction.deferReply({ ephemeral: true });
+        try {
+          const { serverAuditService } = await import('../../services/ServerAuditService');
+          const { channelService } = await import('../../services/ChannelService');
+          const guild = interaction.guild!;
+          
+          // Basic cleanup: find empty channels or specific setup channels
+          const channels = await guild.channels.fetch();
+          let deleted = 0;
+          for (const [id, ch] of channels) {
+            if (ch && (ch.name.includes('ticket') || ch.name.includes('verify') || ch.name.includes('hub'))) {
+              await channelService.deleteChannel(ch);
+              deleted++;
+            }
+          }
+          await interaction.followUp({ content: `🧹 Cleanup complete! Deleted ${deleted} setup channels.` });
+        } catch (e) {
+          await interaction.followUp({ content: `Cleanup failed: ${e instanceof Error ? e.message : 'Unknown error'}` });
+        }
         break;
       case 'admin_server_struct':
         await interaction.deferReply({ ephemeral: true });
@@ -36,9 +54,14 @@ export async function handleAdminDashboardButton(interaction: ButtonInteraction)
           const { setupService } = await import('../../services/SetupService');
           const botMember = await interaction.guild!.members.fetch(interaction.client.user!.id);
           const result = await setupService.quickSetup(interaction.guild!, botMember);
-          await interaction.followUp({ content: `✅ Server Structure Built!\nChannels Created: ${result.channelsCreated.length}\nRoles Created: ${result.rolesCreated.length}` });
+          
+          if (result.errors && result.errors.length > 0) {
+            await interaction.followUp({ content: `⚠️ Setup finished with errors!\nChannels Created: ${result.channelsCreated.length}\nRoles Created: ${result.rolesCreated.length}\nErrors:\n${result.errors.slice(0, 5).join('\n')}` });
+          } else {
+            await interaction.followUp({ content: `✅ Server Structure Built!\nChannels Created: ${result.channelsCreated.length}\nRoles Created: ${result.rolesCreated.length}` });
+          }
         } catch (e) {
-          await interaction.followUp({ content: 'Failed to build server structure.' });
+          await interaction.followUp({ content: `Failed to build server structure: ${e instanceof Error ? e.message : 'Database or Permission Error'}` });
         }
         break;
       default:
