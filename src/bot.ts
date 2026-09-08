@@ -47,8 +47,14 @@ export class Bot {
     const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.ts') || file.endsWith('.js'));
     
     for (const file of commandFiles) {
-      const command: CommandHandler = (await import(path.join(commandsPath, file))).default;
-      this.commands.set(command.data.name, command);
+      let command: any = await import(path.join(commandsPath, file));
+      if (command.default) command = command.default;
+      
+      if (command.data && command.data.name) {
+        this.commands.set(command.data.name, command as CommandHandler);
+      } else {
+        logger.warn(`Command file ${file} is missing 'data' export.`);
+      }
     }
     logger.info(`Loaded ${this.commands.size} commands`);
   }
@@ -64,11 +70,20 @@ export class Bot {
       
       const files = fs.readdirSync(folderPath).filter(file => file.endsWith('.ts') || file.endsWith('.js'));
       for (const file of files) {
-        const interaction: InteractionHandler = (await import(path.join(folderPath, file))).default;
-        this.interactions.set(interaction.customId, interaction);
+        let interaction: any = await import(path.join(folderPath, file));
+        if (interaction.default) interaction = interaction.default;
+
+        const id = interaction.customId || interaction.customIdRegex;
+        if (id) {
+          this.interactions.set(id, interaction as InteractionHandler);
+        } else {
+          // If it's a generic handler like handleHubButton, we can't map it directly here.
+          // We will store it with the filename just so it's loaded, but interactionCreate might need custom logic.
+          logger.warn(`Interaction file ${file} is missing 'customId' export.`);
+        }
       }
     }
-    logger.info(`Loaded ${this.interactions.size} interactions`);
+    logger.info(`Loaded ${this.interactions.size} mapped interactions`);
   }
 
   public async start() {
