@@ -10,8 +10,12 @@ export const execute = async (interaction: ButtonInteraction) => {
     await interaction.deferReply({ ephemeral: true });
     
     const status = await verificationService.getMemberStatus(interaction.guildId!, interaction.user.id);
-    if (status?.status === 'VERIFIED') {
+    if (status?.verificationStatus === 'VERIFIED') {
       return interaction.editReply('Already verified.');
+    }
+
+    if (!status) {
+      await verificationService.startVerification(interaction.guildId!, interaction.user.id, interaction.user.username);
     }
 
     const captcha = captchaService.generateCaptcha();
