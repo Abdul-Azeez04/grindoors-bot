@@ -41,3 +41,4 @@ export const handleGameButtons = async (interaction: ButtonInteraction) => {
       return interaction.reply({ content: 'Unknown action.', ephemeral: true });
   }
 };
+export default { customIdRegex: /^game_/, execute: async (interaction: any) => { return handleGameButtons(interaction); } };

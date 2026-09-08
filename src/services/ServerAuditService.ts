@@ -92,8 +92,8 @@ export class ServerAuditService {
   generateRecommendedStructure(): { categories: { name: string, channels: string[] }[] } {
     return {
       categories: [
-        { name: 'VERIFICATION', channels: ['welcome', 'verify', 'verification-help'] },
-        { name: 'INFORMATION', channels: ['rules', 'announcements', 'updates'] },
+        { name: 'VERIFICATION', channels: ['welcome', 'verify', 'verification-help', 'waiting-room'] },
+        { name: 'INFORMATION', channels: ['rules', 'announcements', 'updates', 'perks'] },
         { name: 'COMMUNITY', channels: ['general', 'gm', 'memes', 'introductions'] },
         { name: 'NFT', channels: ['mint-alerts', 'alpha', 'calls', 'discussions'] },
         { name: 'GAMES', channels: ['game-lobby', 'game-results', 'leaderboards'] },

@@ -143,6 +143,33 @@ export class SetupService {
         result.panelsDeployed.push('Verification Panel');
       }
 
+      // 7. Deploy Game Lobby panel
+      const gameChannel = guild.channels.cache.find(c => c.name === 'game-lobby') as any;
+      if (gameChannel && gameChannel.isTextBased()) {
+        const { createGameLobby } = await import('../panels/GameLobby');
+        const gameLobbyData = createGameLobby();
+        await gameChannel.send(gameLobbyData);
+        result.panelsDeployed.push('Game Lobby');
+      }
+
+      // 8. Deploy Leaderboard panel
+      const lbChannel = guild.channels.cache.find(c => c.name === 'leaderboards') as any;
+      if (lbChannel && lbChannel.isTextBased()) {
+        const { createLeaderboardPanel } = await import('../panels/LeaderboardPanel');
+        const lbData = createLeaderboardPanel();
+        await lbChannel.send(lbData);
+        result.panelsDeployed.push('Leaderboard Panel');
+      }
+
+      // 9. Deploy Mint Board panel
+      const mintChannel = guild.channels.cache.find(c => c.name === 'mint-alerts') as any;
+      if (mintChannel && mintChannel.isTextBased()) {
+        const { createMintBoard } = await import('../panels/MintBoard');
+        const mintData = createMintBoard();
+        await mintChannel.send(mintData);
+        result.panelsDeployed.push('Mint Board');
+      }
+
     } catch (error) {
       logger.error('Error during quick setup:', error);
       result.errors.push(`Critical Setup Error: ${error instanceof Error ? error.message : String(error)}`);
