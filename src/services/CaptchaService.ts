@@ -10,17 +10,13 @@ export class CaptchaService {
   private pendingCaptchas = new Map<string, CaptchaData>();
 
   generateCaptcha() {
-    const captcha = svgCaptcha.create({
-      size: 6,
-      ignoreChars: '0o1i',
-      noise: 2,
-      color: true,
-      background: '#2b2d31'
-    });
+    const num1 = Math.floor(Math.random() * 10) + 1;
+    const num2 = Math.floor(Math.random() * 10) + 1;
+    const answer = (num1 + num2).toString();
+    
     return {
-      text: captcha.text,
-      data: Buffer.from(captcha.data).toString('base64'),
-      svgBuffer: Buffer.from(captcha.data)
+      text: answer,
+      question: `What is **${num1} + ${num2}**?`
     };
   }
 

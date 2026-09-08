@@ -17,26 +17,36 @@ export const execute = async (interaction: ButtonInteraction) => {
     const captcha = captchaService.generateCaptcha();
     captchaService.setCaptcha(interaction.guildId!, interaction.user.id, captcha.text);
 
-    const attachment = new AttachmentBuilder(captcha.svgBuffer, { name: 'captcha.svg' });
+    // Shuffle array function
+    const shuffleArray = (array: string[]) => {
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+      return array;
+    };
 
-    // Generate random wrong answers
-    const generateWrongAnswer = () => Math.random().toString(36).substring(2, 8);
-    const answers = [captcha.text, generateWrongAnswer(), generateWrongAnswer(), generateWrongAnswer()];
-    answers.sort(() => Math.random() - 0.5); // shuffle
+    // Generate 3 random incorrect math answers
+    const generateWrongAnswer = () => {
+      let wrong = parseInt(captcha.text) + Math.floor(Math.random() * 10) - 5;
+      if (wrong === parseInt(captcha.text)) wrong += 1;
+      return wrong.toString();
+    };
+
+    const answers = shuffleArray([captcha.text, generateWrongAnswer(), generateWrongAnswer(), generateWrongAnswer()]);
 
     const row = new ActionRowBuilder<ButtonBuilder>();
-    answers.forEach((ans, index) => {
+    answers.forEach((ans) => {
       row.addComponents(
         new ButtonBuilder()
-          .setCustomId(`captcha_answer_${ans.toLowerCase()}`)
+          .setCustomId(`captcha_answer_${ans}`)
           .setLabel(ans)
           .setStyle(ButtonStyle.Secondary)
       );
     });
 
     await interaction.editReply({
-      content: 'Please select the text shown in the image below:',
-      files: [attachment],
+      content: `🔒 **SECURITY CHECK**\n\n${captcha.question}\n\nPlease select the correct answer below:`,
       components: [row]
     });
   } catch (error: any) {
