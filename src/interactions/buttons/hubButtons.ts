@@ -7,7 +7,13 @@ export async function handleHubButton(interaction: ButtonInteraction) {
     
     switch (customId) {
       case 'hub_verify':
-        await interaction.reply({ content: 'Verification panel would open here.', ephemeral: true });
+        const role = interaction.guild!.roles.cache.find(r => r.name === 'Verified');
+        if (role && interaction.member && 'roles' in interaction.member) {
+          await (interaction.member.roles as any).add(role);
+          await interaction.reply({ content: '✅ You have been successfully verified! Welcome to Grindoors!', ephemeral: true });
+        } else {
+          await interaction.reply({ content: 'Could not find the Verified role. Please contact an admin.', ephemeral: true });
+        }
         break;
       case 'hub_support':
         await interaction.reply({ content: 'Ticket system would open here.', ephemeral: true });

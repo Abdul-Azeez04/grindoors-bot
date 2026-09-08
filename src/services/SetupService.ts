@@ -54,7 +54,41 @@ export class SetupService {
         }
       }
 
-      result.panelsDeployed.push('Verification Panel', 'Community Hub', 'Ticket Panel');
+      const hubChannel = guild.channels.cache.find(c => c.name.includes('hub') || c.name.includes('welcome')) as any;
+      if (hubChannel && hubChannel.isTextBased()) {
+        const hubEmbed = new EmbedBuilder()
+          .setTitle('🚀 GRINDOORS COMMUNITY HUB')
+          .setColor(Colors.PRIMARY)
+          .setDescription('Welcome to Grindoors! Use the buttons below to navigate the community.');
+          
+        const row1 = new ActionRowBuilder<ButtonBuilder>().addComponents(
+          new ButtonBuilder().setCustomId('hub_verify').setLabel('✅ Verify Account').setStyle(ButtonStyle.Success),
+          new ButtonBuilder().setCustomId('hub_rules').setLabel('📜 Read Rules').setStyle(ButtonStyle.Primary),
+          new ButtonBuilder().setCustomId('hub_support').setLabel('🎫 Open Ticket').setStyle(ButtonStyle.Secondary)
+        );
+        const row2 = new ActionRowBuilder<ButtonBuilder>().addComponents(
+          new ButtonBuilder().setCustomId('hub_games').setLabel('🎮 Play Games').setStyle(ButtonStyle.Primary),
+          new ButtonBuilder().setCustomId('hub_leaderboard').setLabel('🏆 Leaderboard').setStyle(ButtonStyle.Secondary),
+          new ButtonBuilder().setCustomId('hub_mints').setLabel('💎 NFTs/Mints').setStyle(ButtonStyle.Secondary)
+        );
+
+        await hubChannel.send({ embeds: [hubEmbed], components: [row1, row2] });
+        result.panelsDeployed.push('Community Hub');
+      }
+
+      const ticketChannel = guild.channels.cache.find(c => c.name.includes('support') || c.name.includes('ticket')) as any;
+      if (ticketChannel && ticketChannel.isTextBased()) {
+        const ticketEmbed = new EmbedBuilder()
+          .setTitle('🎫 SUPPORT TICKETS')
+          .setColor(Colors.Dark) // Assuming this was fixed or exists, wait, let's use PRIMARY
+          .setDescription('Need help? Click below to open a private ticket with the Game Masters.');
+        ticketEmbed.setColor(Colors.PRIMARY);
+        const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
+          new ButtonBuilder().setCustomId('ticket_create').setLabel('Open Ticket').setStyle(ButtonStyle.Primary)
+        );
+        await ticketChannel.send({ embeds: [ticketEmbed], components: [row] });
+        result.panelsDeployed.push('Ticket Panel');
+      }
 
     } catch (error) {
       logger.error('Error during quick setup:', error);
