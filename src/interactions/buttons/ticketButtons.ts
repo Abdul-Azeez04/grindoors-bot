@@ -38,7 +38,7 @@ export async function handleTicketButtons(interaction: ButtonInteraction) {
     }
 
     if (interaction.customId === 'ticket_close_confirm') {
-      await interaction.reply({ content: '🔒 Ticket closed. This channel will be deleted in 5 seconds...' });
+      await interaction.update({ content: '🔒 **Ticket closed.** This channel will be deleted in 5 seconds...', embeds: [], components: [] });
       setTimeout(async () => {
         try { await interaction.channel?.delete(); } catch(e) { /* channel already gone */ }
       }, 5000);
@@ -46,7 +46,7 @@ export async function handleTicketButtons(interaction: ButtonInteraction) {
     }
 
     if (interaction.customId === 'ticket_close_cancel') {
-      await interaction.message.delete().catch(() => {});
+      await interaction.update({ content: '✅ **Ticket closure cancelled.**', embeds: [], components: [] });
       return;
     }
 

@@ -47,16 +47,19 @@ export const execute = async (interaction: ButtonInteraction) => {
         logger.error(`Role assignment failed after CAPTCHA: ${roleErr.message}`);
       }
 
-      await interaction.followUp({ 
-        content: '✅ **CAPTCHA passed!** You now have access to the waiting room.\n\nPlease click **ENTER ACCESS CODE** on the panel above to complete your verification.', 
-        ephemeral: true 
+      await interaction.editReply({ 
+        content: '✅ **CAPTCHA passed!** You now have access to the waiting room.\n\nPlease click **ENTER ACCESS CODE** on the panel to complete your verification.', 
+        components: [] 
       });
     } else {
-      await interaction.followUp({ content: result.message, ephemeral: true });
+      await interaction.editReply({ 
+        content: `❌ **Incorrect Answer:** ${result.message}\nPlease click **Verify Now** to try a new security challenge.`, 
+        components: [] 
+      });
     }
   } catch (error: any) {
     logger.error(error);
-    await interaction.followUp({ content: `An error occurred: ${error.message}`, ephemeral: true }).catch(() => {});
+    await interaction.editReply({ content: `An error occurred: ${error.message}`, components: [] }).catch(() => {});
   }
 };
 

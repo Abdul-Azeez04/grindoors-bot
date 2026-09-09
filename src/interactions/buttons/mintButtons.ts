@@ -19,7 +19,7 @@ export async function handleMintButtons(interaction: ButtonInteraction): Promise
     if (interaction.replied || interaction.deferred) {
       await interaction.editReply(board);
     } else {
-      await interaction.reply({ ...board, ephemeral: true });
+      await interaction.update(board);
     }
   }
 
@@ -58,7 +58,9 @@ export async function handleMintButtons(interaction: ButtonInteraction): Promise
   if (customId.startsWith('mint_delete_')) {
     const mintId = parseInt(customId.split('_')[2]);
     await mintService.deleteMint(mintId);
-    await interaction.reply({ content: 'Mint deleted.', ephemeral: true });
+    const mints = await mintService.getUpcomingMints(guildId);
+    const board = createMintBoard(mints);
+    await interaction.update(board);
   }
 }
 

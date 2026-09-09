@@ -1,13 +1,32 @@
 import { ButtonInteraction, EmbedBuilder, ChannelType, PermissionsBitField, ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
 import { logger } from "../../utils/logger";
 import { Colors } from '../../config/constants';
+import { createAdminPanel } from '../../panels/AdminPanel';
+
+function backRow(...extraButtons: ButtonBuilder[]): ActionRowBuilder<ButtonBuilder> {
+  const row = new ActionRowBuilder<ButtonBuilder>();
+  if (extraButtons.length > 0) {
+    row.addComponents(extraButtons);
+  }
+  row.addComponents(
+    new ButtonBuilder()
+      .setCustomId('admin_back_main')
+      .setLabel('🔙 Back to Admin Menu')
+      .setStyle(ButtonStyle.Secondary)
+  );
+  return row;
+}
 
 export async function handleAdminDashboardButton(interaction: ButtonInteraction) {
   // Permission check
   const member = interaction.member as any;
   if (!member?.permissions?.has(PermissionsBitField.Flags.Administrator) &&
       !member?.permissions?.has(PermissionsBitField.Flags.ManageGuild)) {
-    await interaction.reply({ content: '❌ You need Admin permissions.', ephemeral: true });
+    if (interaction.replied || interaction.deferred) {
+      await interaction.editReply({ content: '❌ You need Admin permissions.' });
+    } else {
+      await interaction.reply({ content: '❌ You need Admin permissions.', ephemeral: true });
+    }
     return;
   }
 
@@ -17,23 +36,34 @@ export async function handleAdminDashboardButton(interaction: ButtonInteraction)
   try {
     switch (customId) {
 
+      // ──────────────── BACK TO MAIN ADMIN MENU ────────────────
+      case 'admin_back_main': {
+        const { embeds, components } = createAdminPanel();
+        await interaction.update({ embeds, components, content: '' });
+        break;
+      }
+
       // ──────────────── SERVER STRUCTURE ────────────────
       case 'admin_server_struct': {
-        await interaction.deferReply({ ephemeral: true });
+        await interaction.deferUpdate();
         const { setupService } = await import('../../services/SetupService');
         const botMember = await guild.members.fetch(interaction.client.user!.id);
         const result = await setupService.quickSetup(guild, botMember);
         
-        const lines = [
-          `✅ **Server Structure Built!**`,
-          `📂 Channels: ${result.channelsCreated.length}`,
-          `🎭 Roles: ${result.rolesCreated.length}`,
-          `📋 Panels: ${result.panelsDeployed.length}`,
-        ];
+        const embed = new EmbedBuilder()
+          .setTitle('🏗 Server Structure Built')
+          .setColor(Colors.SUCCESS)
+          .addFields(
+            { name: 'Channels Created', value: `${result.channelsCreated.length}`, inline: true },
+            { name: 'Roles Created', value: `${result.rolesCreated.length}`, inline: true },
+            { name: 'Panels Deployed', value: `${result.panelsDeployed.length}`, inline: true }
+          );
+
         if (result.errors.length > 0) {
-          lines.push(`\n⚠️ **Errors:**\n${result.errors.slice(0, 5).join('\n')}`);
+          embed.addFields({ name: '⚠️ Errors', value: result.errors.slice(0, 5).join('\n') });
         }
-        await interaction.followUp({ content: lines.join('\n') });
+        
+        await interaction.editReply({ embeds: [embed], components: [backRow()], content: '' });
         break;
       }
 
@@ -62,15 +92,19 @@ export async function handleAdminDashboardButton(interaction: ButtonInteraction)
             .setStyle(ButtonStyle.Secondary)
         );
 
-        await interaction.reply({ embeds: [embed], components: [row], ephemeral: true });
+        await interaction.update({ embeds: [embed], components: [row], content: '' });
         break;
       }
 
       case 'admin_cleanup_cancel': {
+        const cancelEmbed = new EmbedBuilder()
+          .setTitle('✅ Nuclear Wipe Cancelled')
+          .setColor(Colors.SUCCESS)
+          .setDescription('No channels or roles were modified.');
         await interaction.update({
-          content: '✅ **Nuclear wipe cancelled.** No channels or roles were modified.',
-          embeds: [],
-          components: []
+          embeds: [cancelEmbed],
+          components: [backRow()],
+          content: ''
         });
         break;
       }
@@ -135,15 +169,19 @@ export async function handleAdminDashboardButton(interaction: ButtonInteraction)
           }
         }
 
-        let msg = `🧹 **Nuclear Cleanup Complete!**\nDeleted ${deleted} channels/categories and ${rolesDeleted} roles.`;
-        if (skipped.length > 0) msg += `\n⚠️ Could not delete: ${skipped.join(', ')}`;
-        await interaction.followUp({ content: msg, ephemeral: true });
+        const summaryEmbed = new EmbedBuilder()
+          .setTitle('🧹 Nuclear Cleanup Complete')
+          .setColor(Colors.SUCCESS)
+          .setDescription(`Deleted **${deleted}** channels/categories and **${rolesDeleted}** custom roles.`)
+          .setFooter({ text: skipped.length > 0 ? `Could not delete: ${skipped.join(', ')}` : 'Clean reset completed.' });
+
+        await interaction.editReply({ content: '', embeds: [summaryEmbed], components: [backRow()] });
         break;
       }
 
       // ──────────────── ROLES ────────────────
       case 'admin_roles': {
-        await interaction.deferReply({ ephemeral: true });
+        await interaction.deferUpdate();
         const roles = guild.roles.cache
           .filter(r => r.name !== '@everyone')
           .sort((a, b) => b.position - a.position)
@@ -154,15 +192,15 @@ export async function handleAdminDashboardButton(interaction: ButtonInteraction)
           .setTitle('🎭 Role Management')
           .setColor(Colors.PRIMARY)
           .setDescription(roles.join('\n') || 'No roles found.')
-          .setFooter({ text: 'Use Server Structure to create missing roles.' });
+          .setFooter({ text: 'Use Server Structure to create standard roles.' });
         
-        await interaction.followUp({ embeds: [embed] });
+        await interaction.editReply({ embeds: [embed], components: [backRow()], content: '' });
         break;
       }
 
       // ──────────────── MEMBERS ────────────────
       case 'admin_members': {
-        await interaction.deferReply({ ephemeral: true });
+        await interaction.deferUpdate();
         const members = await guild.members.fetch();
         const total = members.size;
         const bots = members.filter(m => m.user.bot).size;
@@ -182,140 +220,175 @@ export async function handleAdminDashboardButton(interaction: ButtonInteraction)
             { name: 'Unverified', value: `${humans - verified}`, inline: true }
           );
 
-        await interaction.followUp({ embeds: [embed] });
+        await interaction.editReply({ embeds: [embed], components: [backRow()], content: '' });
         break;
       }
 
       // ──────────────── VERIFICATION ────────────────
       case 'admin_verification': {
-        await interaction.deferReply({ ephemeral: true });
+        await interaction.deferUpdate();
         const verifyChannel = guild.channels.cache.find(c => c.name === 'verify') as any;
         
         if (verifyChannel && verifyChannel.isTextBased()) {
           const { EmbedBuilder: EB, ActionRowBuilder: ARB, ButtonBuilder: BB, ButtonStyle: BS } = await import('discord.js');
-          const embed = new EB()
+          const panelEmbed = new EB()
             .setTitle('🔐 VERIFICATION REQUIRED')
             .setColor(Colors.PRIMARY)
             .setDescription('Click the button below to verify your account and gain access to the server.\n\nVerification grants you the **Verified** role and access to all community channels.');
           const row = new ARB<any>().addComponents(
             new BB().setCustomId('hub_verify').setLabel('✅ Verify Now').setStyle(BS.Success)
           );
-          await verifyChannel.send({ embeds: [embed], components: [row] });
-          await interaction.followUp({ content: '✅ Verification panel deployed to #verify!' });
+          await verifyChannel.send({ embeds: [panelEmbed], components: [row] });
+          
+          const statusEmbed = new EmbedBuilder()
+            .setTitle('🔐 Verification System')
+            .setColor(Colors.SUCCESS)
+            .setDescription('✅ Verification panel successfully deployed to <#' + verifyChannel.id + '>!\n\nMembers will complete CAPTCHA & optional access code check to get verified.');
+
+          await interaction.editReply({ embeds: [statusEmbed], components: [backRow()], content: '' });
         } else {
-          await interaction.followUp({ content: '❌ No #verify channel found. Click **Server Structure** first.' });
+          const statusEmbed = new EmbedBuilder()
+            .setTitle('🔐 Verification System')
+            .setColor(Colors.WARNING)
+            .setDescription('❌ No `#verify` channel found.\n\nClick **Server Structure** first to create the standard server layout.');
+
+          await interaction.editReply({ embeds: [statusEmbed], components: [backRow()], content: '' });
         }
         break;
       }
 
       // ──────────────── TICKETS ────────────────
       case 'admin_tickets': {
-        await interaction.deferReply({ ephemeral: true });
+        await interaction.deferUpdate();
         const ticketChannel = guild.channels.cache.find(c => c.name === 'tickets' || c.name === 'support') as any;
         
         if (ticketChannel && ticketChannel.isTextBased()) {
           const { EmbedBuilder: EB, ActionRowBuilder: ARB, ButtonBuilder: BB, ButtonStyle: BS } = await import('discord.js');
-          const embed = new EB()
+          const panelEmbed = new EB()
             .setTitle('🎫 SUPPORT TICKETS')
             .setColor(Colors.PRIMARY)
             .setDescription('Need help? Click below to open a private support ticket.\n\nA staff member will assist you as soon as possible.');
           const row = new ARB<any>().addComponents(
             new BB().setCustomId('ticket_create').setLabel('📩 Open Ticket').setStyle(BS.Primary)
           );
-          await ticketChannel.send({ embeds: [embed], components: [row] });
-          await interaction.followUp({ content: '✅ Ticket panel deployed to #tickets!' });
+          await ticketChannel.send({ embeds: [panelEmbed], components: [row] });
+          
+          const statusEmbed = new EmbedBuilder()
+            .setTitle('🎫 Ticket System')
+            .setColor(Colors.SUCCESS)
+            .setDescription('✅ Support ticket panel deployed to <#' + ticketChannel.id + '>!\n\nUsers can now open private channels with staff.');
+
+          await interaction.editReply({ embeds: [statusEmbed], components: [backRow()], content: '' });
         } else {
-          await interaction.followUp({ content: '❌ No #tickets channel found. Click **Server Structure** first.' });
+          const statusEmbed = new EmbedBuilder()
+            .setTitle('🎫 Ticket System')
+            .setColor(Colors.WARNING)
+            .setDescription('❌ No `#tickets` channel found.\n\nClick **Server Structure** first to create the standard channels.');
+
+          await interaction.editReply({ embeds: [statusEmbed], components: [backRow()], content: '' });
         }
         break;
       }
 
       // ──────────────── GM MANAGER ────────────────
       case 'admin_gm': {
-        await interaction.deferReply({ ephemeral: true });
-        const gmChannel = guild.channels.cache.find(c => c.name === 'gm') as any;
-        
-        if (gmChannel && gmChannel.isTextBased()) {
-          const embed = new EmbedBuilder()
-            .setTitle('☀️ GM CHANNEL')
-            .setColor(Colors.SUCCESS)
-            .setDescription('Say **GM** every day to keep your daily streak alive!\n\n🔥 Streak rewards:\n• 7 days: +50 bonus XP\n• 30 days: +200 bonus XP\n• 100 days: Special role!');
-          await gmChannel.send({ embeds: [embed] });
-          await interaction.followUp({ content: '✅ GM panel deployed to #gm!' });
-        } else {
-          await interaction.followUp({ content: '❌ No #gm channel found. Click **Server Structure** first.' });
-        }
+        await interaction.deferUpdate();
+        const embed = new EmbedBuilder()
+          .setTitle('☀️ GM Manager')
+          .setColor(Colors.PRIMARY)
+          .setDescription('Manage daily GM posts, motivational quotes, and community streaks.\n\nChoose an action below:');
+
+        const row1 = new ActionRowBuilder<ButtonBuilder>().addComponents(
+          new ButtonBuilder().setCustomId('gm_add_quote').setLabel('➕ Add Quote').setStyle(ButtonStyle.Primary),
+          new ButtonBuilder().setCustomId('gm_view_quotes').setLabel('📜 View Quotes').setStyle(ButtonStyle.Secondary),
+          new ButtonBuilder().setCustomId('gm_preview').setLabel('👁 Preview GM').setStyle(ButtonStyle.Secondary),
+          new ButtonBuilder().setCustomId('gm_post_now').setLabel('🚀 Post Now').setStyle(ButtonStyle.Danger)
+        );
+
+        await interaction.editReply({ embeds: [embed], components: [row1, backRow()], content: '' });
         break;
       }
 
       // ──────────────── MODERATION ────────────────
       case 'admin_moderation': {
+        await interaction.deferUpdate();
         const embed = new EmbedBuilder()
-          .setTitle('🛡 Moderation Tools')
+          .setTitle('🛡 Moderation Control')
           .setColor(Colors.PRIMARY)
-          .setDescription('**Active protections:**\n✅ Auto-mod enabled\n✅ Link scanning active\n✅ Raid protection ready\n\n**Mod commands:**\n• `/admin` → Members → Manage users\n• Report button on messages\n• Ticket system for disputes');
-        await interaction.reply({ embeds: [embed], ephemeral: true });
+          .setDescription('**Active protections:**\n✅ Auto-mod active\n✅ Link scanning active\n✅ Raid protection ready\n\nSelect a moderation tool:');
+
+        const row1 = new ActionRowBuilder<ButtonBuilder>().addComponents(
+          new ButtonBuilder().setCustomId('mod_warn').setLabel('⚠️ Warn').setStyle(ButtonStyle.Primary),
+          new ButtonBuilder().setCustomId('mod_timeout').setLabel('⏳ Timeout').setStyle(ButtonStyle.Primary),
+          new ButtonBuilder().setCustomId('mod_kick').setLabel('👢 Kick').setStyle(ButtonStyle.Danger),
+          new ButtonBuilder().setCustomId('mod_ban').setLabel('🔨 Ban').setStyle(ButtonStyle.Danger),
+          new ButtonBuilder().setCustomId('mod_raid_toggle').setLabel('🚨 Toggle Raid Mode').setStyle(ButtonStyle.Secondary)
+        );
+
+        await interaction.editReply({ embeds: [embed], components: [row1, backRow()], content: '' });
         break;
       }
 
       // ──────────────── MINTS ────────────────
       case 'admin_mints': {
-        await interaction.deferReply({ ephemeral: true });
-        const mintChannel = guild.channels.cache.find(c => c.name === 'mint-alerts') as any;
-        
-        if (mintChannel && mintChannel.isTextBased()) {
-          const embed = new EmbedBuilder()
-            .setTitle('💎 MINT ALERTS')
-            .setColor(Colors.SUCCESS)
-            .setDescription('Stay tuned for upcoming mint announcements!\n\nAdmins can post mint alerts here using the bot commands.');
-          await mintChannel.send({ embeds: [embed] });
-          await interaction.followUp({ content: '✅ Mints panel deployed to #mint-alerts!' });
-        } else {
-          await interaction.followUp({ content: '❌ No #mint-alerts channel found. Click **Server Structure** first.' });
-        }
+        await interaction.deferUpdate();
+        const { mintService } = await import('../../services/MintService');
+        const mints = await mintService.getUpcomingMints(guild.id);
+        const { createMintBoard } = await import('../../panels/MintBoard');
+        const board = createMintBoard(mints);
+
+        await interaction.editReply({
+          embeds: board.embeds,
+          components: [...board.components, backRow()],
+          content: ''
+        });
         break;
       }
 
       // ──────────────── GAMES ────────────────
       case 'admin_games': {
-        await interaction.deferReply({ ephemeral: true });
+        await interaction.deferUpdate();
         const gameChannel = guild.channels.cache.find(c => c.name === 'game-lobby') as any;
         
         if (gameChannel && gameChannel.isTextBased()) {
-          const { ActionRowBuilder: ARB, ButtonBuilder: BB, ButtonStyle: BS } = await import('discord.js');
+          const { createGameLobby } = await import('../../panels/GameLobby');
+          const lobby = createGameLobby();
+          await gameChannel.send({ embeds: lobby.embeds, components: lobby.components });
+          
           const embed = new EmbedBuilder()
-            .setTitle('🎮 GAME LOBBY')
-            .setColor(Colors.PRIMARY)
-            .setDescription('Play mini-games to earn XP and climb the leaderboard!\n\n**Available Games:**\n🎯 Trivia\n🔢 Number Guess\n✂️ Rock Paper Scissors');
-          const row = new ARB<any>().addComponents(
-            new BB().setCustomId('game_trivia').setLabel('🎯 Trivia').setStyle(BS.Primary),
-            new BB().setCustomId('game_number').setLabel('🔢 Number Guess').setStyle(BS.Primary),
-            new BB().setCustomId('game_rps').setLabel('✂️ RPS').setStyle(BS.Primary)
-          );
-          await gameChannel.send({ embeds: [embed], components: [row] });
-          await interaction.followUp({ content: '✅ Game lobby deployed to #game-lobby!' });
+            .setTitle('🎮 Game Lobby Deployed')
+            .setColor(Colors.SUCCESS)
+            .setDescription('✅ 24-game interactive lobby refreshed in <#' + gameChannel.id + '>!');
+
+          await interaction.editReply({ embeds: [embed], components: [backRow()], content: '' });
         } else {
-          await interaction.followUp({ content: '❌ No #game-lobby channel found. Click **Server Structure** first.' });
+          const embed = new EmbedBuilder()
+            .setTitle('🎮 Games Manager')
+            .setColor(Colors.PRIMARY)
+            .setDescription('**24 Mini-Games Active in System**\n\nNo `#game-lobby` channel found. Click **Server Structure** first to deploy the game lobby channel.');
+
+          await interaction.editReply({ embeds: [embed], components: [backRow()], content: '' });
         }
         break;
       }
 
       // ──────────────── XP & LEVELS ────────────────
       case 'admin_xp': {
+        await interaction.deferUpdate();
         const embed = new EmbedBuilder()
           .setTitle('🏆 XP & Levels System')
           .setColor(Colors.PRIMARY)
-          .setDescription('**How XP works:**\n• Send messages: +5-15 XP\n• Daily GM: +25 XP\n• Win games: +50-100 XP\n• Daily streak bonuses\n\n**Level Titles:**\n🟢 Lv 1 - Fresh Wallet\n🔵 Lv 5 - Grinder\n🟣 Lv 10 - Degen\n🟡 Lv 20 - Sniper\n🔴 Lv 30 - Alpha Hunter\n⚪ Lv 50 - Whale\n🟤 Lv 75 - OG\n👑 Lv 100 - Legend');
-        await interaction.reply({ embeds: [embed], ephemeral: true });
+          .setDescription('**How XP works:**\n• Send messages: +15-25 XP (60s cooldown)\n• Daily GM: +25 XP + streak multiplier\n• Win mini-games: +25-100 XP\n\n**Level Titles:**\n🟢 Lv 1 - Fresh Wallet\n🔵 Lv 5 - Grinder\n🟣 Lv 10 - Degen\n🟡 Lv 20 - Sniper\n🔴 Lv 30 - Alpha Hunter\n⚪ Lv 50 - Whale\n🟤 Lv 75 - OG\n👑 Lv 100 - Legend');
+        
+        await interaction.editReply({ embeds: [embed], components: [backRow()], content: '' });
         break;
       }
 
       // ──────────────── ACCESS CODES ────────────────
       case 'admin_access_codes': {
-        await interaction.deferReply({ ephemeral: true });
+        await interaction.deferUpdate();
         const { ActionRowBuilder: ARB, ButtonBuilder: BB, ButtonStyle: BS } = await import('discord.js');
         
-        // Show current codes and generate option
         let codeList = 'No access codes generated yet.';
         try {
           const { prisma } = await import('../../database/client');
@@ -335,20 +408,20 @@ export async function handleAdminDashboardButton(interaction: ButtonInteraction)
           .setTitle('🔑 Access Code Manager')
           .setColor(Colors.PRIMARY)
           .setDescription(`**Active Codes:**\n${codeList}`)
-          .setFooter({ text: 'Click below to generate a new code.' });
+          .setFooter({ text: 'Generate one-time or multi-use access codes.' });
         
-        const row = new ARB<any>().addComponents(
-          new BB().setCustomId('ac_generate').setLabel('🔑 Generate New Code').setStyle(BS.Success),
+        const actionButtons = [
+          new BB().setCustomId('ac_generate').setLabel('🔑 Generate Code').setStyle(BS.Success),
           new BB().setCustomId('ac_generate_bulk').setLabel('📦 Generate 5 Codes').setStyle(BS.Primary)
-        );
+        ];
 
-        await interaction.followUp({ embeds: [embed], components: [row] });
+        await interaction.editReply({ embeds: [embed], components: [backRow(...actionButtons)], content: '' });
         break;
       }
 
       // ──────────────── ANALYTICS ────────────────
       case 'admin_analytics': {
-        await interaction.deferReply({ ephemeral: true });
+        await interaction.deferUpdate();
         const members = await guild.members.fetch();
         const channels = guild.channels.cache;
         
@@ -364,34 +437,35 @@ export async function handleAdminDashboardButton(interaction: ButtonInteraction)
             { name: 'Boosts', value: `${guild.premiumSubscriptionCount || 0}`, inline: true }
           );
         
-        await interaction.followUp({ embeds: [embed] });
+        await interaction.editReply({ embeds: [embed], components: [backRow()], content: '' });
         break;
       }
 
       // ──────────────── AUDIT LOGS ────────────────
       case 'admin_audit_logs': {
-        await interaction.deferReply({ ephemeral: true });
+        await interaction.deferUpdate();
         const auditChannel = guild.channels.cache.find(c => c.name === 'audit-logs') as any;
         
-        if (auditChannel) {
-          const embed = new EmbedBuilder()
-            .setTitle('📜 Audit Logs')
-            .setColor(Colors.PRIMARY)
-            .setDescription(`Audit logs are being sent to <#${auditChannel.id}>.\n\n**Tracked events:**\n• Member joins/leaves\n• Role changes\n• Channel modifications\n• Moderation actions\n• Message deletions`);
-          await interaction.followUp({ embeds: [embed] });
-        } else {
-          await interaction.followUp({ content: '❌ No #audit-logs channel found. Click **Server Structure** first.' });
-        }
+        const embed = new EmbedBuilder()
+          .setTitle('📜 Audit Logs')
+          .setColor(Colors.PRIMARY)
+          .setDescription(auditChannel 
+            ? `Audit logs are streaming to <#${auditChannel.id}>.\n\n**Tracked events:**\n• Member joins/leaves\n• Role changes\n• Channel modifications\n• Moderation actions\n• Message deletions`
+            : '❌ No `#audit-logs` channel found. Click **Server Structure** first.');
+
+        await interaction.editReply({ embeds: [embed], components: [backRow()], content: '' });
         break;
       }
 
       // ──────────────── SETTINGS ────────────────
       case 'admin_settings': {
+        await interaction.deferUpdate();
         const embed = new EmbedBuilder()
           .setTitle('⚙️ Bot Settings')
           .setColor(Colors.PRIMARY)
           .setDescription('**Current Configuration:**\n✅ Verification: Active\n✅ XP System: Active\n✅ Auto-mod: Active\n✅ Ticket System: Active\n✅ Games: Active\n\n**Timezone:** Africa/Lagos\n**Prefix:** / (slash commands)');
-        await interaction.reply({ embeds: [embed], ephemeral: true });
+        
+        await interaction.editReply({ embeds: [embed], components: [backRow()], content: '' });
         break;
       }
 
@@ -435,7 +509,7 @@ export async function handleAdminDashboardButton(interaction: ButtonInteraction)
     if (!interaction.replied && !interaction.deferred) {
       await interaction.reply({ content: `❌ Error: ${error instanceof Error ? error.message : 'Unknown error'}`, ephemeral: true });
     } else {
-      await interaction.followUp({ content: `❌ Error: ${error instanceof Error ? error.message : 'Unknown error'}` }).catch(() => {});
+      await interaction.editReply({ content: `❌ Error: ${error instanceof Error ? error.message : 'Unknown error'}` }).catch(() => {});
     }
   }
 }

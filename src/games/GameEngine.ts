@@ -31,9 +31,7 @@ export abstract class GameEngine {
       
       this.timeout = setTimeout(() => {
         if (this.status === 'ACTIVE') {
-          this.end().then(async ({ winners, embed }) => {
-            await channel.send({ embeds: [embed] });
-          }).catch(err => logger.error(`Error ending game: ${err}`));
+          this.end().catch(err => logger.error(`Error ending game: ${err}`));
         }
       }, this.timeoutMs);
     } catch (error) {
@@ -56,22 +54,22 @@ export abstract class GameEngine {
       await XPService.awardXP(this.guildId, winner.userId, winner.score, 'GAME', `Won ${this.getGameType()}`);
     }
     
+    const embed = new EmbedBuilder()
+      .setTitle(`${this.getGameType()} — Round Finished!`)
+      .setColor(Colors.SUCCESS)
+      .setDescription(
+        winners.length > 0 
+          ? `🏆 **Winners:**\n${winners.map(w => `<@${w.userId}>: +${w.score} XP`).join('\n')}`
+          : '⌛ **Round Ended:** No correct answers were submitted.'
+      );
+
     if (this.message) {
       try {
-        await this.message.edit({ components: [] }); // Disable buttons
+        await this.message.edit({ embeds: [embed], components: [] }); // Update in-place & disable buttons
       } catch (e) {
         // ignore
       }
     }
-    
-    const embed = new EmbedBuilder()
-      .setTitle(`${this.getGameType()} - Finished!`)
-      .setColor(Colors.SUCCESS)
-      .setDescription(
-        winners.length > 0 
-          ? `Winners:\n${winners.map(w => `<@${w.userId}>: +${w.score} XP`).join('\n')}`
-          : 'No one won this round.'
-      );
       
     return { winners, embed };
   }
