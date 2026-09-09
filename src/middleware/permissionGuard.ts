@@ -2,20 +2,34 @@ import { ChatInputCommandInteraction, ButtonInteraction, PermissionResolvable, P
 import { env } from '../config/environment';
 
 export function requirePermission(interaction: ChatInputCommandInteraction | ButtonInteraction, permission: PermissionResolvable): boolean {
-  if (!interaction.member || !(interaction.member instanceof GuildMember)) return false;
-  return interaction.member.permissions.has(permission);
+  if (interaction.memberPermissions) {
+    return interaction.memberPermissions.has(permission);
+  }
+  const member = interaction.member as any;
+  if (!member) return false;
+  return member.permissions ? member.permissions.has(permission) : false;
 }
 
 export function requireRole(interaction: ChatInputCommandInteraction | ButtonInteraction, roleId: string): boolean {
-  if (!interaction.member || !(interaction.member instanceof GuildMember)) return false;
-  return interaction.member.roles.cache.has(roleId);
+  const member = interaction.member as any;
+  if (!member) return false;
+  if (Array.isArray(member.roles)) {
+    return member.roles.includes(roleId);
+  }
+  return member.roles?.cache?.has(roleId) ?? false;
 }
 
 export function requireBotOwner(interaction: ChatInputCommandInteraction | ButtonInteraction): boolean {
-  return interaction.user.id === env.BOT_OWNER_ID;
+  return Boolean(env.BOT_OWNER_ID && interaction.user.id === env.BOT_OWNER_ID);
 }
 
 export function requireAdmin(interaction: ChatInputCommandInteraction | ButtonInteraction): boolean {
-  if (!interaction.member || !(interaction.member instanceof GuildMember)) return false;
-  return interaction.member.permissions.has(PermissionsBitField.Flags.Administrator) || interaction.member.permissions.has(PermissionsBitField.Flags.ManageGuild);
+  if (interaction.memberPermissions) {
+    return interaction.memberPermissions.has(PermissionsBitField.Flags.Administrator) ||
+           interaction.memberPermissions.has(PermissionsBitField.Flags.ManageGuild);
+  }
+  const member = interaction.member as any;
+  if (!member?.permissions) return false;
+  return member.permissions.has(PermissionsBitField.Flags.Administrator) ||
+         member.permissions.has(PermissionsBitField.Flags.ManageGuild);
 }

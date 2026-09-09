@@ -2,6 +2,7 @@ import { Guild, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, Chan
 import { logger } from "../utils/logger";
 import { Colors } from '../config/constants';
 import { EventHandler } from '../types';
+import { prisma } from '../database/client';
 
 const event: EventHandler = {
   name: 'guildCreate',
@@ -10,7 +11,6 @@ const event: EventHandler = {
     logger.info(`Joined new guild: ${guild.name} (${guild.id})`);
     
     // Register guild in the database to prevent Foreign Key failures
-    const { prisma } = require('../database/client');
     await prisma.guild.upsert({
       where: { id: guild.id },
       create: { id: guild.id, name: guild.name },

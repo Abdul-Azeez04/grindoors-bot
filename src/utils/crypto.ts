@@ -2,7 +2,7 @@ import crypto from 'crypto';
 
 export function generateAccessCode(): string {
   const segment = () => crypto.randomBytes(2).toString('hex').toUpperCase();
-  return `NOVA-${segment()}-${segment()}`;
+  return `GRIND-${segment()}-${segment()}`;
 }
 
 export function generateSecureRandom(length: number): string {

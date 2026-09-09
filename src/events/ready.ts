@@ -1,6 +1,7 @@
 import { Client, ActivityType } from 'discord.js';
 import { EventHandler } from '../types';
 import { logger } from '../utils/logger';
+import { prisma } from '../database/client';
 
 const event: EventHandler = {
   name: 'ready',
@@ -10,7 +11,6 @@ const event: EventHandler = {
     logger.info(`Serving ${client.guilds.cache.size} guilds.`);
     
     // Sync guilds to database
-    const { prisma } = require('../database/client');
     for (const guild of client.guilds.cache.values()) {
       await prisma.guild.upsert({
         where: { id: guild.id },
