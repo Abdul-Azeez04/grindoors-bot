@@ -4,9 +4,10 @@ import { mintService } from '../../services/MintService';
 import { createMintBoard } from '../../panels/MintBoard';
 import { Colors } from '../../config/constants';
 
-export async function handleMintButtons(interaction: ButtonInteraction) {
+export async function handleMintButtons(interaction: ButtonInteraction): Promise<void> {
   if (!requireAdmin(interaction)) {
-    return interaction.reply({ content: 'Missing permissions.', ephemeral: true });
+    await interaction.reply({ content: 'Missing permissions.', ephemeral: true });
+    return;
   }
 
   const { customId, guildId } = interaction;

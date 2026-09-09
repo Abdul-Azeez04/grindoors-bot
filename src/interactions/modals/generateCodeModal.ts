@@ -39,3 +39,8 @@ export const execute = async (interaction: ModalSubmitInteraction) => {
     await interaction.editReply('An error occurred while generating the code.');
   }
 };
+
+export default {
+  customId,
+  execute
+};

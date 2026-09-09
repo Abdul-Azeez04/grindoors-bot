@@ -5,7 +5,7 @@ import { logger } from '../../utils/logger';
 
 export const customId = 'modal_access_code';
 
-export const execute = async (interaction: ModalSubmitInteraction) => {
+export const execute = async (interaction: ModalSubmitInteraction): Promise<void> => {
   try {
     await interaction.deferReply({ ephemeral: true });
     const code = interaction.fields.getTextInputValue('access_code_input');
@@ -13,7 +13,8 @@ export const execute = async (interaction: ModalSubmitInteraction) => {
     const validation = await accessCodeService.validateCode(interaction.guildId!, code, interaction.user.id);
 
     if (!validation.valid || !validation.accessCode) {
-      return interaction.editReply('❌ Invalid or expired access code.');
+      await interaction.editReply('❌ Invalid or expired access code.');
+      return;
     }
 
     await accessCodeService.useCode(validation.accessCode.id, interaction.user.id);
@@ -67,7 +68,8 @@ export const execute = async (interaction: ModalSubmitInteraction) => {
         }
       } catch (roleError: any) {
         logger.error(`Role assignment failed: ${roleError.message}`);
-        return interaction.editReply(`✅ Code accepted but role assignment failed: ${roleError.message}\nPlease ask an admin to manually assign your roles.`);
+        await interaction.editReply(`✅ Code accepted but role assignment failed: ${roleError.message}\nPlease ask an admin to manually assign your roles.`);
+        return;
       }
     }
 

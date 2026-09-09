@@ -4,9 +4,10 @@ import { channelService } from '../../services/ChannelService';
 import { serverAuditService } from '../../services/ServerAuditService';
 import { Colors } from '../../config/constants';
 
-export async function handleServerManagementButtons(interaction: ButtonInteraction) {
+export async function handleServerManagementButtons(interaction: ButtonInteraction): Promise<void> {
   if (!requireAdmin(interaction)) {
-    return interaction.reply({ content: 'Missing permissions.', ephemeral: true });
+    await interaction.reply({ content: 'Missing permissions.', ephemeral: true });
+    return;
   }
 
   const { customId } = interaction;
@@ -79,7 +80,7 @@ export async function handleServerManagementButtons(interaction: ButtonInteracti
 }
 
 export default {
-  customIdRegex: /^admin_/,
+  customIdRegex: /^server_mgmt_/,
   execute: async (interaction: any) => {
     return handleServerManagementButtons(interaction);
   }

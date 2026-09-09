@@ -1,10 +1,11 @@
 import { Guild, TextChannel, ChannelType, PermissionsBitField, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
+import { TicketCategory, TicketStatus } from '@prisma/client';
 import { prisma } from "../database/client";
 import { logger } from "../utils/logger";
 import { Colors } from '../config/constants';
 
 export class TicketService {
-  static async createTicket(guildId: string, creatorId: string, category: string, guild: Guild) {
+  static async createTicket(guildId: string, creatorId: string, category: TicketCategory | string, guild: Guild) {
     try {
       const creator = await guild.members.fetch(creatorId);
       const ticketCount = await prisma.ticket.count({ where: { guildId } });
@@ -31,8 +32,8 @@ export class TicketService {
           guildId,
           creatorId,
           channelId: channel.id,
-          category,
-          status: 'OPEN',
+          category: category as TicketCategory,
+          status: TicketStatus.OPEN,
         }
       });
 
@@ -69,7 +70,7 @@ export class TicketService {
     try {
       await prisma.ticket.update({
         where: { id: ticketId },
-        data: { status: 'CLAIMED', assignedToId: staffId }
+        data: { status: TicketStatus.CLAIMED, assignedToId: staffId }
       });
     } catch (error) {
       logger.error(`Error claiming ticket: ${error}`);
@@ -81,7 +82,7 @@ export class TicketService {
     try {
       await prisma.ticket.update({
         where: { id: ticketId },
-        data: { status: 'ESCALATED' }
+        data: { status: TicketStatus.ESCALATED }
       });
     } catch (error) {
       logger.error(`Error escalating ticket: ${error}`);
@@ -93,7 +94,7 @@ export class TicketService {
     try {
       const ticket = await prisma.ticket.update({
         where: { id: ticketId },
-        data: { status: 'CLOSED', closedAt: new Date() }
+        data: { status: TicketStatus.CLOSED, closedAt: new Date() }
       });
       // In a real app we might fetch the channel and delete it or archive it.
       return ticket;
@@ -106,7 +107,7 @@ export class TicketService {
   static async getOpenTickets(guildId: string) {
     try {
       return await prisma.ticket.findMany({
-        where: { guildId, status: { not: 'CLOSED' } }
+        where: { guildId, status: { not: TicketStatus.CLOSED } }
       });
     } catch (error) {
       logger.error(`Error getting open tickets: ${error}`);

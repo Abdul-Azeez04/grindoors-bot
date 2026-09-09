@@ -6,8 +6,8 @@ import { nftTriviaData } from './data/nftTrivia';
 export class NFTTrivia extends GameEngine {
   private correctIndex: number = 0;
 
-  constructor(guildId: string) {
-    super(guildId);
+  constructor(guildId: string, channelId: string) {
+    super(guildId, channelId);
     this.xpReward = 25;
   }
 
@@ -15,7 +15,7 @@ export class NFTTrivia extends GameEngine {
     return 'NFT Trivia';
   }
 
-  public createQuestionEmbed() {
+  public createQuestionEmbed(): { embed: EmbedBuilder, components: ActionRowBuilder<any>[] } {
     const questionData = nftTriviaData[Math.floor(Math.random() * nftTriviaData.length)];
     
     const optionsWithIndices = questionData.options.map((opt, idx) => ({ text: opt, originalIndex: idx }));
@@ -26,7 +26,7 @@ export class NFTTrivia extends GameEngine {
       .setTitle('🧠 NFT Trivia Time!')
       .setDescription(`**${questionData.question}**`)
       .setColor(Colors.PRIMARY)
-      .setFooter({ text: `Game ID: ${this.gameId} | You have 30 seconds!` });
+      .setFooter({ text: `Game ID: ${this.gameId || 'Active'} | You have 30 seconds!` });
 
     const row = new ActionRowBuilder<ButtonBuilder>();
     shuffled.forEach((opt, index) => {
@@ -47,6 +47,7 @@ export class NFTTrivia extends GameEngine {
     const answerIndex = parseInt(answer.replace('game_ans_', ''), 10);
     const isCorrect = answerIndex === this.correctIndex;
     if (isCorrect) {
+      this.recordScore(userId, this.xpReward);
       return { correct: true, message: `✅ Correct! You earned ${this.xpReward} XP!` };
     } else {
       return { correct: false, message: `❌ Incorrect! Better luck next time.` };

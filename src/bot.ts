@@ -86,10 +86,20 @@ export class Bot {
     logger.info(`Loaded ${this.interactions.size} mapped interactions`);
   }
 
+  public async initScheduler() {
+    try {
+      await import('./scheduler/workers');
+      logger.info('Scheduler workers initialized');
+    } catch (error: any) {
+      logger.warn(`Scheduler worker initialization skipped/delayed: ${error?.message}`);
+    }
+  }
+
   public async start() {
     await this.loadEvents();
     await this.loadCommands();
     await this.loadInteractions();
+    await this.initScheduler();
     
     try {
       await this.client.login(env.DISCORD_TOKEN);

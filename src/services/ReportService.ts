@@ -1,19 +1,20 @@
 import { Guild, EmbedBuilder } from 'discord.js';
+import { ReportCategory, ReportStatus } from '@prisma/client';
 import { prisma } from "../database/client";
 import { logger } from "../utils/logger";
 import { Colors } from '../config/constants';
 
 export class ReportService {
-  static async createReport(guildId: string, reporterId: string, category: string, description: string, targetId?: string) {
+  static async createReport(guildId: string, reporterId: string, category: ReportCategory | string, description: string, targetId?: string) {
     try {
       const report = await prisma.report.create({
         data: {
           guildId,
           reporterId,
-          category,
+          category: category as ReportCategory,
           description,
           targetId,
-          status: 'PENDING'
+          status: ReportStatus.PENDING
         }
       });
       return report;
@@ -23,10 +24,10 @@ export class ReportService {
     }
   }
 
-  static async getReports(guildId: string, status?: string) {
+  static async getReports(guildId: string, status?: ReportStatus | string) {
     try {
       const whereClause: any = { guildId };
-      if (status) whereClause.status = status;
+      if (status) whereClause.status = status as ReportStatus;
       return await prisma.report.findMany({ where: whereClause });
     } catch (error) {
       logger.error(`Error getting reports: ${error}`);
@@ -34,11 +35,11 @@ export class ReportService {
     }
   }
 
-  static async updateReportStatus(reportId: number, status: string, handledById: string) {
+  static async updateReportStatus(reportId: number, status: ReportStatus | string, handledById: string) {
     try {
       await prisma.report.update({
         where: { id: reportId },
-        data: { status, handledById }
+        data: { status: status as ReportStatus, handledById }
       });
     } catch (error) {
       logger.error(`Error updating report status: ${error}`);

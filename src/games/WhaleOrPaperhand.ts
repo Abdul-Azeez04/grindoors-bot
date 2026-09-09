@@ -1,14 +1,14 @@
 import { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
 import { GameEngine } from './GameEngine';
 import { Colors } from '../config/constants';
-import { cryptoScenarios } from './data/cryptoScenarios';
+import { whaleScenarios } from './data/cryptoScenarios';
 
 export class WhaleOrPaperhand extends GameEngine {
   private isWhale: boolean = false;
   private explanation: string = '';
 
-  constructor(guildId: string) {
-    super(guildId);
+  constructor(guildId: string, channelId: string) {
+    super(guildId, channelId);
     this.xpReward = 15;
   }
 
@@ -16,17 +16,16 @@ export class WhaleOrPaperhand extends GameEngine {
     return 'Whale or Paperhand';
   }
 
-  public createQuestionEmbed() {
-    const scenarios = cryptoScenarios.filter(s => s.isWhale !== undefined);
-    const scenario = scenarios[Math.floor(Math.random() * scenarios.length)];
-    this.isWhale = scenario.isWhale!;
+  public createQuestionEmbed(): { embed: EmbedBuilder, components: ActionRowBuilder<any>[] } {
+    const scenario = whaleScenarios[Math.floor(Math.random() * whaleScenarios.length)];
+    this.isWhale = scenario.isWhale;
     this.explanation = scenario.explanation;
 
     const embed = new EmbedBuilder()
       .setTitle('🐋 Whale or 📄 Paperhand?')
       .setDescription(`**Scenario:**\n${scenario.scenario}\n\nWhat kind of behavior is this?`)
       .setColor(Colors.PRIMARY)
-      .setFooter({ text: `Game ID: ${this.gameId}` });
+      .setFooter({ text: `Game ID: ${this.gameId || 'Active'}` });
 
     const row = new ActionRowBuilder<ButtonBuilder>()
       .addComponents(
@@ -40,9 +39,10 @@ export class WhaleOrPaperhand extends GameEngine {
   public handleAnswer(userId: string, answer: string): { correct: boolean; message: string } {
     if (this.hasAnswered(userId)) return { correct: false, message: 'You already answered!' };
     this.markAnswered(userId);
-    const answeredWhale = answer === 'game_ans_whale';
+    const answeredWhale = answer === 'game_ans_whale' || answer === 'whale';
     const isCorrect = answeredWhale === this.isWhale;
     if (isCorrect) {
+      this.recordScore(userId, this.xpReward);
       return { correct: true, message: `✅ Spot on! You earned ${this.xpReward} XP!\n*${this.explanation}*` };
     } else {
       return { correct: false, message: `❌ Nope!\n*${this.explanation}*` };

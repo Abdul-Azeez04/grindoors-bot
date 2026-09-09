@@ -1,4 +1,4 @@
-import { ButtonInteraction, EmbedBuilder, ChannelType, PermissionsBitField } from 'discord.js';
+import { ButtonInteraction, EmbedBuilder, ChannelType, PermissionsBitField, ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder } from 'discord.js';
 import { logger } from "../../utils/logger";
 import { Colors } from '../../config/constants';
 
@@ -350,6 +350,38 @@ export async function handleAdminDashboardButton(interaction: ButtonInteraction)
           .setColor(Colors.PRIMARY)
           .setDescription('**Current Configuration:**\n✅ Verification: Active\n✅ XP System: Active\n✅ Auto-mod: Active\n✅ Ticket System: Active\n✅ Games: Active\n\n**Timezone:** Africa/Lagos\n**Prefix:** / (slash commands)');
         await interaction.reply({ embeds: [embed], ephemeral: true });
+        break;
+      }
+
+      case 'admin_create_channel': {
+        const modal = new ModalBuilder()
+          .setCustomId('modal_create_channel')
+          .setTitle('Create Channel');
+          
+        const nameInput = new TextInputBuilder()
+          .setCustomId('channel_name')
+          .setLabel('Channel Name')
+          .setStyle(TextInputStyle.Short)
+          .setRequired(true);
+          
+        modal.addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(nameInput));
+        await interaction.showModal(modal);
+        break;
+      }
+
+      case 'admin_create_category': {
+        const modal = new ModalBuilder()
+          .setCustomId('modal_create_category')
+          .setTitle('Create Category');
+          
+        const nameInput = new TextInputBuilder()
+          .setCustomId('category_name')
+          .setLabel('Category Name')
+          .setStyle(TextInputStyle.Short)
+          .setRequired(true);
+          
+        modal.addComponents(new ActionRowBuilder<TextInputBuilder>().addComponents(nameInput));
+        await interaction.showModal(modal);
         break;
       }
 

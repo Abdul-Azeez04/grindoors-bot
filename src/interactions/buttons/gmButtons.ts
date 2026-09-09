@@ -3,9 +3,10 @@ import { requireAdmin } from '../../middleware/permissionGuard';
 import { gmService } from '../../services/GMService';
 import { Colors } from '../../config/constants';
 
-export async function handleGMButtons(interaction: ButtonInteraction) {
+export async function handleGMButtons(interaction: ButtonInteraction): Promise<void> {
   if (!requireAdmin(interaction)) {
-    return interaction.reply({ content: 'Missing permissions.', ephemeral: true });
+    await interaction.reply({ content: 'Missing permissions.', ephemeral: true });
+    return;
   }
 
   const { customId, guildId, guild } = interaction;
@@ -53,7 +54,10 @@ export async function handleGMButtons(interaction: ButtonInteraction) {
 
   if (customId === 'gm_preview') {
     const quote = await gmService.getRandomQuote(guildId);
-    if (!quote) return interaction.reply({ content: 'No quotes available.', ephemeral: true });
+    if (!quote) {
+      await interaction.reply({ content: 'No quotes available.', ephemeral: true });
+      return;
+    }
     
     const embed = new EmbedBuilder()
       .setTitle('☀️ Good Morning! (Preview)')

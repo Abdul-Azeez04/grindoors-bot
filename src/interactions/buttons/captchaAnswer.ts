@@ -59,3 +59,8 @@ export const execute = async (interaction: ButtonInteraction) => {
     await interaction.followUp({ content: `An error occurred: ${error.message}`, ephemeral: true }).catch(() => {});
   }
 };
+
+export default {
+  customIdRegex,
+  execute
+};

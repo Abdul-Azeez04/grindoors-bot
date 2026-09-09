@@ -27,14 +27,15 @@ export class FlagGuess extends GameEngine {
     const embed = new EmbedBuilder()
       .setTitle('Guess the Flag!')
       .setDescription(`Which country does this flag belong to?\n\n# ${this.currentFlag.emoji}`)
-      .setColor(Colors.PRIMARY);
+      .setColor(Colors.PRIMARY)
+      .setFooter({ text: `Game ID: ${this.gameId || 'Active'}` });
       
     const row = new ActionRowBuilder<ButtonBuilder>();
     
     this.currentOptions.forEach((option, index) => {
       row.addComponents(
         new ButtonBuilder()
-          .setCustomId(`game_answer_${index}`)
+          .setCustomId(`game_ans_${index}`)
           .setLabel(option)
           .setStyle(ButtonStyle.Primary)
       );
@@ -44,7 +45,11 @@ export class FlagGuess extends GameEngine {
   }
   
   handleAnswer(userId: string, answer: string): { correct: boolean, message: string } {
-    const answerIndex = parseInt(answer);
+    if (this.hasAnswered(userId)) return { correct: false, message: 'You already answered!' };
+    this.markAnswered(userId);
+
+    const cleanAnswer = answer.replace(/^(game_ans_|game_answer_|ans_)/, '');
+    const answerIndex = parseInt(cleanAnswer);
     if (isNaN(answerIndex) || answerIndex < 0 || answerIndex >= this.currentOptions.length) {
       return { correct: false, message: 'Invalid option.' };
     }
@@ -53,13 +58,10 @@ export class FlagGuess extends GameEngine {
     const correct = selectedCountry === this.currentFlag.country;
     
     if (correct) {
-      if (!this.players.has(userId)) {
-        this.players.set(userId, { score: 0, answered: true });
-      }
-      this.players.get(userId)!.score += this.xpReward;
-      return { correct: true, message: `Correct! You earned ${this.xpReward} XP.` };
+      this.recordScore(userId, this.xpReward);
+      return { correct: true, message: `✅ Correct! That is the flag of **${this.currentFlag.country}**! (+${this.xpReward} XP)` };
     }
     
-    return { correct: false, message: 'Wrong answer!' };
+    return { correct: false, message: `❌ Wrong! That was the flag of **${this.currentFlag.country}**.` };
   }
 }

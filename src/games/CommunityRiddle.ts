@@ -6,8 +6,8 @@ import { riddlesData as puzzlesData } from './data/puzzlesData';
 export class CommunityRiddle extends GameEngine {
   private correctIndex: number = 0;
 
-  constructor(guildId: string) {
-    super(guildId);
+  constructor(guildId: string, channelId: string) {
+    super(guildId, channelId);
     this.xpReward = 25;
   }
 
@@ -15,21 +15,19 @@ export class CommunityRiddle extends GameEngine {
     return 'Community Riddle';
   }
 
-  public createQuestionEmbed() {
-    const riddles = puzzlesData.filter(p => p.type === 'riddle');
-    const riddle = riddles[Math.floor(Math.random() * riddles.length)];
+  public createQuestionEmbed(): { embed: EmbedBuilder, components: ActionRowBuilder<any>[] } {
+    const riddle = puzzlesData[Math.floor(Math.random() * puzzlesData.length)];
     
-    const options = riddle.options || [riddle.answer, 'Bitcoin', 'Ethereum', 'Satoshi'];
-    const optionsWithIndices = options.map((opt, idx) => ({ text: opt, isCorrect: opt === riddle.answer }));
+    const optionsWithIndices = riddle.options.map((opt, idx) => ({ text: opt, isCorrect: idx === riddle.correctIndex }));
     const shuffled = this.shuffleArray(optionsWithIndices);
     
     this.correctIndex = shuffled.findIndex(opt => opt.isCorrect);
 
     const embed = new EmbedBuilder()
       .setTitle('🤔 Community Riddle')
-      .setDescription(`**Riddle:**\n${riddle.emojis}`)
+      .setDescription(`**Riddle:**\n${riddle.question}`)
       .setColor(Colors.PRIMARY)
-      .setFooter({ text: `Game ID: ${this.gameId}` });
+      .setFooter({ text: `Game ID: ${this.gameId || 'Active'}` });
 
     const row = new ActionRowBuilder<ButtonBuilder>();
     shuffled.forEach((opt, index) => {
@@ -47,6 +45,7 @@ export class CommunityRiddle extends GameEngine {
     
     const answerIndex = parseInt(answer.replace('game_ans_', ''), 10);
     if (answerIndex === this.correctIndex) {
+      this.recordScore(userId, this.xpReward);
       return { correct: true, message: `✅ Correct! You earned ${this.xpReward} XP!` };
     } else {
       return { correct: false, message: `❌ Incorrect! Better luck next time.` };

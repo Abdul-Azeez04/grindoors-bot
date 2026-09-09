@@ -8,8 +8,8 @@ export class UnscrambleNFT extends GameEngine {
   private correctTerm: string = '';
   private correctIndex: number = 0;
 
-  constructor(guildId: string) {
-    super(guildId);
+  constructor(guildId: string, channelId: string) {
+    super(guildId, channelId);
     this.xpReward = 25;
   }
 
@@ -26,7 +26,7 @@ export class UnscrambleNFT extends GameEngine {
     return chars.join('');
   }
 
-  public createQuestionEmbed() {
+  public createQuestionEmbed(): { embed: EmbedBuilder, components: ActionRowBuilder<any>[] } {
     const pool = this.shuffleArray(NFT_TERMS).slice(0, 4);
     this.correctTerm = pool[0];
     const scrambled = this.scrambleWord(this.correctTerm);
@@ -40,7 +40,7 @@ export class UnscrambleNFT extends GameEngine {
       .setTitle('🔠 Unscramble NFT Term')
       .setDescription(`Unscramble this word:\n**${scrambled}**`)
       .setColor(Colors.PRIMARY)
-      .setFooter({ text: `Game ID: ${this.gameId}` });
+      .setFooter({ text: `Game ID: ${this.gameId || 'Active'}` });
 
     const row = new ActionRowBuilder<ButtonBuilder>();
     shuffled.forEach((opt, index) => {
@@ -58,6 +58,7 @@ export class UnscrambleNFT extends GameEngine {
     
     const answerIndex = parseInt(answer.replace('game_ans_', ''), 10);
     if (answerIndex === this.correctIndex) {
+      this.recordScore(userId, this.xpReward);
       return { correct: true, message: `✅ Correct! It was ${this.correctTerm}. You earned ${this.xpReward} XP!` };
     } else {
       return { correct: false, message: `❌ Incorrect! The correct term was ${this.correctTerm}.` };

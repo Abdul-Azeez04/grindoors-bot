@@ -20,10 +20,10 @@ export async function handleHubButton(interaction: ButtonInteraction) {
       }
       case 'hub_support':
         try {
-          const channel = await TicketService.createTicket(interaction.guildId!, interaction.user.id, 'GENERAL', guild);
-          await interaction.reply({ content: `Ticket created: <#${channel.id}>`, ephemeral: true });
+          const { channel } = await TicketService.createTicket(interaction.guildId!, interaction.user.id, 'GENERAL', guild);
+          await interaction.reply({ content: `✅ Ticket created: <#${channel.id}>`, ephemeral: true });
         } catch (err) {
-          await interaction.reply({ content: 'Failed to create ticket.', ephemeral: true });
+          await interaction.reply({ content: '❌ Failed to create ticket.', ephemeral: true });
         }
         break;
       case 'hub_games': {
@@ -33,12 +33,14 @@ export async function handleHubButton(interaction: ButtonInteraction) {
       }
       case 'hub_leaderboard': {
         const leaderboard = await createLeaderboardPanel(guild.id);
-        await interaction.reply({ embeds: [leaderboard], ephemeral: true });
+        await interaction.reply({ ...leaderboard, ephemeral: true });
         break;
       }
       case 'hub_mints': {
-        const mintBoard = createMintBoard([]);
-        await interaction.reply({ embeds: [mintBoard], ephemeral: true });
+        const { mintService } = await import('../../services/MintService');
+        const mints = await mintService.getUpcomingMints(guild.id);
+        const mintBoard = createMintBoard(mints);
+        await interaction.reply({ ...mintBoard, ephemeral: true });
         break;
       }
       case 'hub_rules': {

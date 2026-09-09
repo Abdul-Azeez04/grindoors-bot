@@ -5,12 +5,13 @@ import { Colors } from '../../config/constants';
 
 export const customIdRegex = /^modal_create_/;
 
-export const execute = async (interaction: ModalSubmitInteraction) => {
+export const execute = async (interaction: ModalSubmitInteraction): Promise<void> => {
   try {
     await interaction.deferReply({ ephemeral: true });
 
     if (!interaction.memberPermissions?.has('Administrator')) {
-      return interaction.editReply('❌ You do not have permission to perform this action.');
+      await interaction.editReply('❌ You do not have permission to perform this action.');
+      return;
     }
 
     if (interaction.customId === 'modal_create_channel') {

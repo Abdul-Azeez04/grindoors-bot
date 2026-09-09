@@ -5,9 +5,14 @@ import { Colors } from '../config/constants';
 export class FindDifference extends GameEngine {
     private diffIndex: number = 0;
 
+    constructor(guildId: string, channelId: string) {
+        super(guildId, channelId);
+        this.xpReward = 20;
+    }
+
     getGameType() { return 'Find The Difference'; }
 
-    createQuestionEmbed() {
+    createQuestionEmbed(): { embed: EmbedBuilder, components: ActionRowBuilder<any>[] } {
         const pairs = [
             ['😀','😃'], ['🍎','🍅'], ['🚗','🚙'], ['☀️','🌤️'], ['🐶','🐱']
         ];
@@ -31,24 +36,31 @@ export class FindDifference extends GameEngine {
         const embed = new EmbedBuilder()
             .setTitle('Find The Difference')
             .setColor(Colors.PRIMARY)
-            .setDescription(`Which row is slightly different?\n\n${rows}`);
+            .setDescription(`Which row is slightly different?\n\n${rows}`)
+            .setFooter({ text: `Game ID: ${this.gameId || 'Active'}` });
             
         const row = new ActionRowBuilder<ButtonBuilder>();
         for (let i = 0; i < 4; i++) {
             row.addComponents(
                 new ButtonBuilder()
-                    .setCustomId(`ans_${i}`)
+                    .setCustomId(`game_ans_${i}`)
                     .setLabel(`Row ${i + 1}`)
                     .setStyle(ButtonStyle.Primary)
             );
         }
         
-        return { embeds: [embed], components: [row] };
+        return { embed, components: [row] };
     }
 
     handleAnswer(userId: string, answer: string) {
-        const selected = parseInt(answer.replace('ans_', ''));
+        if (this.hasAnswered(userId)) return { correct: false, message: 'You already answered!' };
+        this.markAnswered(userId);
+        const selected = parseInt(answer.replace(/^(game_ans_|ans_)/, ''));
         const correct = selected === this.diffIndex;
-        return { correct, message: correct ? 'Correct! You found the difference.' : `Wrong! The difference was in Row ${this.diffIndex + 1}.` };
+        if (correct) {
+            this.recordScore(userId, this.xpReward);
+            return { correct: true, message: `✅ Correct! You found the difference in Row ${this.diffIndex + 1}! (+${this.xpReward} XP)` };
+        }
+        return { correct: false, message: `❌ Wrong! The difference was in Row ${this.diffIndex + 1}.` };
     }
 }

@@ -11,8 +11,8 @@ const prompts = [
 export class QuickDraw extends GameEngine {
   private correctIndex: number = 0;
 
-  constructor(guildId: string) {
-    super(guildId);
+  constructor(guildId: string, channelId: string) {
+    super(guildId, channelId);
     this.xpReward = 30;
   }
 
@@ -20,7 +20,7 @@ export class QuickDraw extends GameEngine {
     return 'Quick Draw';
   }
 
-  public createQuestionEmbed() {
+  public createQuestionEmbed(): { embed: EmbedBuilder, components: ActionRowBuilder<any>[] } {
     const prompt = prompts[Math.floor(Math.random() * prompts.length)];
     
     const optionsWithIndices = prompt.options.map((opt, idx) => ({ text: opt, originalIndex: idx }));
@@ -32,7 +32,7 @@ export class QuickDraw extends GameEngine {
       .setTitle('🎨 Quick Draw (Emoji Match)')
       .setDescription(`Find the emoji combination that best matches:\n**${prompt.word}**`)
       .setColor(Colors.PRIMARY)
-      .setFooter({ text: `Game ID: ${this.gameId}` });
+      .setFooter({ text: `Game ID: ${this.gameId || 'Active'}` });
 
     const row = new ActionRowBuilder<ButtonBuilder>();
     shuffled.forEach((opt, index) => {
@@ -50,6 +50,7 @@ export class QuickDraw extends GameEngine {
     
     const answerIndex = parseInt(answer.replace('game_ans_', ''), 10);
     if (answerIndex === this.correctIndex) {
+      this.recordScore(userId, this.xpReward);
       return { correct: true, message: `✅ Correct! You earned ${this.xpReward} XP!` };
     } else {
       return { correct: false, message: `❌ Incorrect! Better luck next time.` };

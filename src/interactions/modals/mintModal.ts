@@ -3,7 +3,7 @@ import { mintService } from '../../services/MintService';
 import { Colors } from '../../config/constants';
 import { logger } from "../../utils/logger";
 
-export async function handleMintModal(interaction: ModalSubmitInteraction) {
+export async function handleMintModal(interaction: ModalSubmitInteraction): Promise<void> {
   if (interaction.customId === 'modal_add_mint') {
     const projectName = interaction.fields.getTextInputValue('projectName');
     const chain = interaction.fields.getTextInputValue('chain');
@@ -20,7 +20,8 @@ export async function handleMintModal(interaction: ModalSubmitInteraction) {
     const mintTime = new Date(mintTimeStr);
     
     if (isNaN(mintTime.getTime())) {
-      return interaction.reply({ content: 'Invalid time format. Please use ISO format (e.g. 2024-12-01T15:00:00Z)', ephemeral: true });
+      await interaction.reply({ content: 'Invalid time format. Please use ISO format (e.g. 2024-12-01T15:00:00Z)', ephemeral: true });
+      return;
     }
 
     try {

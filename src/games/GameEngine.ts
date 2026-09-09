@@ -96,6 +96,16 @@ export abstract class GameEngine {
       player.answered = true;
     }
   }
+
+  public recordScore(userId: string, score: number): void {
+    const player = this.players.get(userId);
+    if (player) {
+      player.score += score;
+      player.answered = true;
+    } else {
+      this.players.set(userId, { score, answered: true });
+    }
+  }
   
   protected shuffleArray<T>(array: T[]): T[] {
     const arr = [...array];

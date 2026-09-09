@@ -1,11 +1,12 @@
 import { ButtonInteraction, ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder } from 'discord.js';
 import { RaidProtectionService } from '../../services/RaidProtectionService';
 
-export async function handleModerationButtons(interaction: ButtonInteraction) {
+export async function handleModerationButtons(interaction: ButtonInteraction): Promise<void> {
   if (!interaction.customId.startsWith('mod_')) return;
   
   if (!interaction.memberPermissions?.has('Administrator')) {
-    return interaction.reply({ content: 'You do not have permission to use moderation tools.', ephemeral: true });
+    await interaction.reply({ content: 'You do not have permission to use moderation tools.', ephemeral: true });
+    return;
   }
 
   if (interaction.customId === 'mod_warn') {

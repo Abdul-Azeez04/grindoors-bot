@@ -26,16 +26,18 @@ import { UnscrambleNFT } from '../../games/UnscrambleNFT';
 import { FlagPuzzle } from '../../games/FlagPuzzle';
 
 
-export const handleGameSelect = async (interaction: StringSelectMenuInteraction) => {
+export const handleGameSelect = async (interaction: StringSelectMenuInteraction): Promise<void> => {
   const gameType = interaction.values[0];
   const channel = interaction.channel as TextChannel;
   
   if (!channel) {
-    return interaction.reply({ content: 'Games can only be played in text channels.', ephemeral: true });
+    await interaction.reply({ content: 'Games can only be played in text channels.', ephemeral: true });
+    return;
   }
 
   if (GameManager.getActiveGame(channel.id)) {
-    return interaction.reply({ content: 'There is already an active game in this channel!', ephemeral: true });
+    await interaction.reply({ content: 'There is already an active game in this channel!', ephemeral: true });
+    return;
   }
 
   let game;
@@ -66,7 +68,8 @@ export const handleGameSelect = async (interaction: StringSelectMenuInteraction)
     case 'flagpuzzle': game = new FlagPuzzle(interaction.guildId!, channel.id); break;
 
     default:
-      return interaction.reply({ content: 'Game not implemented yet!', ephemeral: true });
+      await interaction.reply({ content: 'Game not implemented yet!', ephemeral: true });
+      return;
   }
 
   GameManager.setActiveGame(channel.id, game);

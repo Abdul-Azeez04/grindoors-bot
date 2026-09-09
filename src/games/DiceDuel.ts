@@ -5,8 +5,8 @@ import { Colors } from '../config/constants';
 export class DiceDuel extends GameEngine {
   private diceEmojis = ['⚀', '⚁', '⚂', '⚃', '⚄', '⚅'];
 
-  constructor(guildId: string) {
-    super(guildId);
+  constructor(guildId: string, channelId: string) {
+    super(guildId, channelId);
     this.xpReward = 25;
   }
 
@@ -14,12 +14,12 @@ export class DiceDuel extends GameEngine {
     return 'Dice Duel';
   }
 
-  public createQuestionEmbed() {
+  public createQuestionEmbed(): { embed: EmbedBuilder, components: ActionRowBuilder<any>[] } {
     const embed = new EmbedBuilder()
       .setTitle('🎲 Dice Duel')
       .setDescription(`Roll the dice! Highest roll wins.`)
       .setColor(Colors.PRIMARY)
-      .setFooter({ text: `Game ID: ${this.gameId}` });
+      .setFooter({ text: `Game ID: ${this.gameId || 'Active'}` });
 
     const row = new ActionRowBuilder<ButtonBuilder>()
       .addComponents(
@@ -39,6 +39,7 @@ export class DiceDuel extends GameEngine {
     const isWin = userRoll > botRoll;
 
     if (isWin) {
+      this.recordScore(userId, this.xpReward);
       return { correct: true, message: `✅ You rolled ${this.diceEmojis[userRoll]} vs Bot's ${this.diceEmojis[botRoll]}! You earned ${this.xpReward} XP!` };
     } else {
       return { correct: false, message: `❌ You rolled ${this.diceEmojis[userRoll]} vs Bot's ${this.diceEmojis[botRoll]}! You lost.` };

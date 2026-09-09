@@ -5,8 +5,8 @@ import { Colors } from '../config/constants';
 export class Rumble extends GameEngine {
   private joinedPlayers = new Set<string>();
 
-  constructor(guildId: string) {
-    super(guildId);
+  constructor(guildId: string, channelId: string) {
+    super(guildId, channelId);
     this.xpReward = 100;
   }
 
@@ -14,12 +14,12 @@ export class Rumble extends GameEngine {
     return 'Rumble';
   }
 
-  public createQuestionEmbed() {
+  public createQuestionEmbed(): { embed: EmbedBuilder, components: ActionRowBuilder<any>[] } {
     const embed = new EmbedBuilder()
       .setTitle('⚔️ Rumble! Multiplayer Elimination')
       .setDescription('Join the rumble! May the best player win. Lobby closes in 30 seconds.')
       .setColor(Colors.PRIMARY)
-      .setFooter({ text: `Game ID: ${this.gameId}` });
+      .setFooter({ text: `Game ID: ${this.gameId || 'Active'}` });
 
     const row = new ActionRowBuilder<ButtonBuilder>()
       .addComponents(
@@ -30,7 +30,7 @@ export class Rumble extends GameEngine {
   }
 
   public handleAnswer(userId: string, answer: string): { correct: boolean; message: string } {
-    if (answer === 'game_join_rumble') {
+    if (answer === 'game_join_rumble' || answer === 'rumble') {
       if (this.joinedPlayers.has(userId)) {
         return { correct: false, message: 'You already joined the Rumble!' };
       }
@@ -39,5 +39,14 @@ export class Rumble extends GameEngine {
       return { correct: true, message: '✅ You joined the Rumble!' };
     }
     return { correct: false, message: 'Invalid action.' };
+  }
+
+  async end(): Promise<{ winners: { userId: string, score: number }[], embed: EmbedBuilder }> {
+    if (this.joinedPlayers.size > 0) {
+      const playersList = Array.from(this.joinedPlayers);
+      const winnerId = playersList[Math.floor(Math.random() * playersList.length)];
+      this.recordScore(winnerId, this.xpReward);
+    }
+    return super.end();
   }
 }

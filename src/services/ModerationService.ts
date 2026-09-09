@@ -1,4 +1,5 @@
 import { Guild, Message } from 'discord.js';
+import { WarningSeverity, ModActionType } from '@prisma/client';
 import { prisma } from "../database/client";
 import { logger } from "../utils/logger";
 
@@ -36,10 +37,10 @@ export class ModerationService {
     }
   }
 
-  static async warnMember(guildId: string, memberId: string, moderatorId: string, reason: string, severity: string) {
+  static async warnMember(guildId: string, memberId: string, moderatorId: string, reason: string, severity: WarningSeverity | string = WarningSeverity.MEDIUM) {
     try {
       const warning = await prisma.warning.create({
-        data: { guildId, memberId, moderatorId, reason, severity }
+        data: { guildId, memberId, moderatorId, reason, severity: severity as WarningSeverity }
       });
 
       await prisma.member.update({
@@ -101,10 +102,10 @@ export class ModerationService {
     }
   }
 
-  static async logAction(guildId: string, action: string, targetId: string, moderatorId: string, reason?: string, duration?: number) {
+  static async logAction(guildId: string, action: ModActionType | string, targetId: string, moderatorId: string, reason?: string, duration?: number) {
     try {
       await prisma.moderationAction.create({
-        data: { guildId, action, targetId, moderatorId, reason, duration }
+        data: { guildId, action: action as ModActionType, targetId, moderatorId, reason, duration }
       });
     } catch (error) {
       logger.error(`Error logging mod action: ${error}`);

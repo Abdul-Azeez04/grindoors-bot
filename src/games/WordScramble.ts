@@ -8,9 +8,14 @@ export class WordScramble extends GameEngine {
     private originalWord: string = '';
     private options: string[] = [];
 
+    constructor(guildId: string, channelId: string) {
+        super(guildId, channelId);
+        this.xpReward = 25;
+    }
+
     getGameType() { return 'Word Scramble'; }
 
-    createQuestionEmbed() {
+    createQuestionEmbed(): { embed: EmbedBuilder, components: ActionRowBuilder<any>[] } {
         this.originalWord = this.shuffleArray([...WORDS])[0];
         const scrambled = this.shuffleArray(this.originalWord.split('')).join('');
         
@@ -24,24 +29,32 @@ export class WordScramble extends GameEngine {
         const embed = new EmbedBuilder()
             .setTitle('Word Scramble')
             .setColor(Colors.PRIMARY)
-            .setDescription(`Unscramble this crypto word:\n\n**${scrambled}**`);
+            .setDescription(`Unscramble this crypto word:\n\n**${scrambled}**`)
+            .setFooter({ text: `Game ID: ${this.gameId || 'Active'}` });
             
         const row = new ActionRowBuilder<ButtonBuilder>();
         options.forEach((opt, idx) => {
             row.addComponents(
                 new ButtonBuilder()
-                    .setCustomId(`ans_${idx}`)
+                    .setCustomId(`game_ans_${idx}`)
                     .setLabel(opt)
                     .setStyle(ButtonStyle.Primary)
             );
         });
         
-        return { embeds: [embed], components: [row] };
+        return { embed, components: [row] };
     }
 
     handleAnswer(userId: string, answer: string) {
-        const selected = this.options[parseInt(answer.replace('ans_', ''))];
+        if (this.hasAnswered(userId)) return { correct: false, message: 'You already answered!' };
+        this.markAnswered(userId);
+        const idx = parseInt(answer.replace(/^(game_ans_|ans_)/, ''));
+        const selected = this.options[idx];
         const correct = selected === this.originalWord;
-        return { correct, message: correct ? 'Correct! You unscrambled the word.' : `Wrong! The word was ${this.originalWord}.` };
+        if (correct) {
+            this.recordScore(userId, this.xpReward);
+            return { correct: true, message: `✅ Correct! You unscrambled **${this.originalWord}** (+${this.xpReward} XP)` };
+        }
+        return { correct: false, message: `❌ Wrong! The word was **${this.originalWord}**.` };
     }
 }

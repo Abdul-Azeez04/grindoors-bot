@@ -15,35 +15,41 @@ export class SpeedQuiz extends GameEngine {
 
     getGameType() { return 'Speed Quiz'; }
 
-    createQuestionEmbed() {
+    createQuestionEmbed(): { embed: EmbedBuilder, components: ActionRowBuilder<any>[] } {
         this.question = this.shuffleArray([...nftTriviaData])[0];
         this.startTime = Date.now();
         
         const embed = new EmbedBuilder()
             .setTitle('Speed Quiz!')
             .setColor(Colors.PRIMARY)
-            .setDescription(`**${this.question.question}**\n\nAnswer quickly for more XP!`);
+            .setDescription(`**${this.question.question}**\n\nAnswer quickly for more XP!`)
+            .setFooter({ text: `Game ID: ${this.gameId || 'Active'} | 15s limit!` });
             
         const row = new ActionRowBuilder<ButtonBuilder>();
         this.question.options.forEach((opt: string, idx: number) => {
             row.addComponents(
                 new ButtonBuilder()
-                    .setCustomId(`ans_${idx}`)
+                    .setCustomId(`game_ans_${idx}`)
                     .setLabel(opt.substring(0, 80))
                     .setStyle(ButtonStyle.Primary)
             );
         });
         
-        return { embeds: [embed], components: [row] };
+        return { embed, components: [row] };
     }
 
     handleAnswer(userId: string, answer: string) {
-        const correct = parseInt(answer.replace('ans_', '')) === this.question.correctIndex;
+        if (this.hasAnswered(userId)) return { correct: false, message: 'You already answered!' };
+        this.markAnswered(userId);
+        const idx = parseInt(answer.replace(/^(game_ans_|ans_)/, ''));
+        const correct = idx === this.question.correctIndex;
         if (correct) {
             const timeTaken = Date.now() - this.startTime;
             const bonus = Math.max(0, Math.floor((15000 - timeTaken) / 1000) * 2);
-            return { correct: true, message: `Correct! You answered in ${(timeTaken / 1000).toFixed(1)}s and earned ${bonus} bonus XP!` };
+            const totalXP = this.xpReward + bonus;
+            this.recordScore(userId, totalXP);
+            return { correct: true, message: `✅ Correct! You answered in ${(timeTaken / 1000).toFixed(1)}s and earned **${totalXP} XP**!` };
         }
-        return { correct: false, message: `Wrong! The correct answer was: ${this.question.options[this.question.correctIndex]}` };
+        return { correct: false, message: `❌ Wrong! The correct answer was: **${this.question.options[this.question.correctIndex]}**` };
     }
 }

@@ -7,15 +7,16 @@ export class TriviaStreak extends GameEngine {
   private correctIndex: number = 0;
   private userStreaks = new Map<string, number>();
 
-  constructor(guildId: string) {
-    super(guildId);
+  constructor(guildId: string, channelId: string) {
+    super(guildId, channelId);
+    this.xpReward = 25;
   }
 
   public getGameType(): string {
     return 'Trivia Streak';
   }
 
-  public createQuestionEmbed() {
+  public createQuestionEmbed(): { embed: EmbedBuilder, components: ActionRowBuilder<any>[] } {
     const questionData = nftTriviaData[Math.floor(Math.random() * nftTriviaData.length)];
     
     const optionsWithIndices = questionData.options.map((opt, idx) => ({ text: opt, originalIndex: idx }));
@@ -26,7 +27,7 @@ export class TriviaStreak extends GameEngine {
       .setTitle('🔥 Trivia Streak!')
       .setDescription(`**${questionData.question}**\n\nKeep answering correctly to build your streak!`)
       .setColor(Colors.PRIMARY)
-      .setFooter({ text: `Game ID: ${this.gameId}` });
+      .setFooter({ text: `Game ID: ${this.gameId || 'Active'}` });
 
     const row = new ActionRowBuilder<ButtonBuilder>();
     shuffled.forEach((opt, index) => {
@@ -39,6 +40,8 @@ export class TriviaStreak extends GameEngine {
   }
 
   public handleAnswer(userId: string, answer: string): { correct: boolean; message: string } {
+    if (this.hasAnswered(userId)) return { correct: false, message: 'You already answered!' };
+    this.markAnswered(userId);
     const answerIndex = parseInt(answer.replace('game_ans_', ''), 10);
     const isCorrect = answerIndex === this.correctIndex;
     
@@ -46,6 +49,7 @@ export class TriviaStreak extends GameEngine {
       const currentStreak = (this.userStreaks.get(userId) || 0) + 1;
       this.userStreaks.set(userId, currentStreak);
       const xp = currentStreak * 10;
+      this.recordScore(userId, xp);
       return { correct: true, message: `✅ Correct! Your streak is now 🔥 ${currentStreak}. You earned ${xp} XP!` };
     } else {
       this.userStreaks.set(userId, 0);

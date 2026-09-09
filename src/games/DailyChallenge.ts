@@ -5,8 +5,8 @@ import { Colors } from '../config/constants';
 export class DailyChallenge extends GameEngine {
   private lastDailyDate = new Map<string, string>();
 
-  constructor(guildId: string) {
-    super(guildId);
+  constructor(guildId: string, channelId: string) {
+    super(guildId, channelId);
     this.xpReward = 50;
   }
 
@@ -14,12 +14,12 @@ export class DailyChallenge extends GameEngine {
     return 'Daily Challenge';
   }
 
-  public createQuestionEmbed() {
+  public createQuestionEmbed(): { embed: EmbedBuilder, components: ActionRowBuilder<any>[] } {
     const embed = new EmbedBuilder()
       .setTitle('📅 Daily Challenge')
       .setDescription('Claim your daily bonus XP! Come back tomorrow for more.')
       .setColor(Colors.SUCCESS)
-      .setFooter({ text: `Game ID: ${this.gameId}` });
+      .setFooter({ text: `Game ID: ${this.gameId || 'Active'}` });
 
     const row = new ActionRowBuilder<ButtonBuilder>()
       .addComponents(
@@ -36,6 +36,7 @@ export class DailyChallenge extends GameEngine {
     }
     
     this.lastDailyDate.set(userId, today);
+    this.recordScore(userId, this.xpReward);
     return { correct: true, message: `✅ You claimed your Daily Challenge! +${this.xpReward} XP!` };
   }
 }

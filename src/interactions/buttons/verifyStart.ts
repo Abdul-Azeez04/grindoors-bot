@@ -5,13 +5,14 @@ import { logger } from '../../utils/logger';
 
 export const customId = 'verify_start';
 
-export const execute = async (interaction: ButtonInteraction) => {
+export const execute = async (interaction: ButtonInteraction): Promise<void> => {
   try {
     await interaction.deferReply({ ephemeral: true });
     
     const status = await verificationService.getMemberStatus(interaction.guildId!, interaction.user.id);
     if (status?.verificationStatus === 'VERIFIED') {
-      return interaction.editReply('Already verified.');
+      await interaction.editReply('Already verified.');
+      return;
     }
 
     if (!status) {

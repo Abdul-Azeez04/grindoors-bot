@@ -15,7 +15,7 @@ export class WordChain extends GameEngine {
 
     getGameType() { return 'Word Chain'; }
 
-    createQuestionEmbed() {
+    createQuestionEmbed(): { embed: EmbedBuilder, components: ActionRowBuilder<any>[] } {
         const startWord = this.shuffleArray([...WORDS])[0];
         const lastLetter = startWord.slice(-1);
         
@@ -30,24 +30,32 @@ export class WordChain extends GameEngine {
         const embed = new EmbedBuilder()
             .setTitle('Word Chain')
             .setColor(Colors.PRIMARY)
-            .setDescription(`The starting word is **${startWord}**.\nWhich word logically follows in a word chain?`);
+            .setDescription(`The starting word is **${startWord}**.\nWhich word logically follows in a word chain?`)
+            .setFooter({ text: `Game ID: ${this.gameId || 'Active'}` });
             
         const row = new ActionRowBuilder<ButtonBuilder>();
         options.forEach((opt, idx) => {
             row.addComponents(
                 new ButtonBuilder()
-                    .setCustomId(`ans_${idx}`)
+                    .setCustomId(`game_ans_${idx}`)
                     .setLabel(opt)
                     .setStyle(ButtonStyle.Primary)
             );
         });
         
-        return { embeds: [embed], components: [row] };
+        return { embed, components: [row] };
     }
 
     handleAnswer(userId: string, answer: string) {
-        const selected = this.options[parseInt(answer.replace('ans_', ''))];
+        if (this.hasAnswered(userId)) return { correct: false, message: 'You already answered!' };
+        this.markAnswered(userId);
+        const idx = parseInt(answer.replace(/^(game_ans_|ans_)/, ''));
+        const selected = this.options[idx];
         const correct = selected === this.targetWord;
-        return { correct, message: correct ? 'Correct! Chain continues.' : `Wrong! The correct word was ${this.targetWord}.` };
+        if (correct) {
+            this.recordScore(userId, this.xpReward);
+            return { correct: true, message: `✅ Correct! The chain continues with **${this.targetWord}** (+${this.xpReward} XP)` };
+        }
+        return { correct: false, message: `❌ Wrong! The correct word was **${this.targetWord}**.` };
     }
 }

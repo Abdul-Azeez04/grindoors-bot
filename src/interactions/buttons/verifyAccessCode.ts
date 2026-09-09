@@ -4,11 +4,12 @@ import { logger } from '../../utils/logger';
 
 export const customId = 'verify_access_code';
 
-export const execute = async (interaction: ButtonInteraction) => {
+export const execute = async (interaction: ButtonInteraction): Promise<void> => {
   try {
     const status = await verificationService.getMemberStatus(interaction.guildId!, interaction.user.id);
     if (status?.verificationStatus !== 'WAITING_ROOM') {
-      return interaction.reply({ content: 'You are not in the waiting room yet. Please pass the CAPTCHA first.', ephemeral: true });
+      await interaction.reply({ content: 'You are not in the waiting room yet. Please pass the CAPTCHA first.', ephemeral: true });
+      return;
     }
 
     const modal = new ModalBuilder()

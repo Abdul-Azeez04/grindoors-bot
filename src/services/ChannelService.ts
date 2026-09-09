@@ -6,13 +6,13 @@ export class ChannelService {
     try {
       const channel = await guild.channels.create({
         name,
-        type,
+        type: type as any,
         parent: options?.category,
         topic: options?.topic,
         permissionOverwrites: options?.permissions,
       });
       logger.info(`Created channel ${name} in guild ${guild.id}`);
-      return channel;
+      return channel as unknown as GuildChannel;
     } catch (error) {
       logger.error(`Error creating channel ${name}:`, error);
       throw error;

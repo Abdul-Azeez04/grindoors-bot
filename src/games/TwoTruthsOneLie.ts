@@ -11,8 +11,8 @@ const truthsAndLies = [
 export class TwoTruthsOneLie extends GameEngine {
   private lieIndex: number = 0;
 
-  constructor(guildId: string) {
-    super(guildId);
+  constructor(guildId: string, channelId: string) {
+    super(guildId, channelId);
     this.xpReward = 25;
   }
 
@@ -20,7 +20,7 @@ export class TwoTruthsOneLie extends GameEngine {
     return 'Two Truths One Lie';
   }
 
-  public createQuestionEmbed() {
+  public createQuestionEmbed(): { embed: EmbedBuilder, components: ActionRowBuilder<any>[] } {
     const data = truthsAndLies[Math.floor(Math.random() * truthsAndLies.length)];
     
     const statementsWithIndices = data.statements.map((stmt, idx) => ({ text: stmt, originalIndex: idx }));
@@ -32,7 +32,7 @@ export class TwoTruthsOneLie extends GameEngine {
       .setTitle('🤥 Two Truths and One Lie')
       .setDescription(`Find the lie among these three statements!`)
       .setColor(Colors.WARNING)
-      .setFooter({ text: `Game ID: ${this.gameId}` });
+      .setFooter({ text: `Game ID: ${this.gameId || 'Active'}` });
 
     const row = new ActionRowBuilder<ButtonBuilder>();
     shuffled.forEach((stmt, index) => {
@@ -51,6 +51,7 @@ export class TwoTruthsOneLie extends GameEngine {
     
     const answerIndex = parseInt(answer.replace('game_ans_', ''), 10);
     if (answerIndex === this.lieIndex) {
+      this.recordScore(userId, this.xpReward);
       return { correct: true, message: `✅ You found the lie! You earned ${this.xpReward} XP!` };
     } else {
       return { correct: false, message: `❌ That was a truth! Better luck next time.` };
