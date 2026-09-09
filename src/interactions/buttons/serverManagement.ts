@@ -24,13 +24,13 @@ export async function handleServerManagementButtons(interaction: ButtonInteracti
     const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
       new ButtonBuilder().setCustomId('admin_create_channel').setLabel('Create Channel').setStyle(ButtonStyle.Primary),
       new ButtonBuilder().setCustomId('admin_create_category').setLabel('Create Category').setStyle(ButtonStyle.Primary),
-      new ButtonBuilder().setCustomId('admin_cleanup').setLabel('Audit Server').setStyle(ButtonStyle.Danger)
+      new ButtonBuilder().setCustomId('server_audit_run').setLabel('Audit Server').setStyle(ButtonStyle.Danger)
     );
 
     await interaction.reply({ embeds: [embed], components: [row], ephemeral: true });
   }
 
-  if (customId === 'admin_cleanup') {
+  if (customId === 'server_audit_run') {
     if (!interaction.guild) return;
     await interaction.deferReply({ ephemeral: true });
     
@@ -80,7 +80,7 @@ export async function handleServerManagementButtons(interaction: ButtonInteracti
 }
 
 export default {
-  customIdRegex: /^server_mgmt_/,
+  customIdRegex: /^(?:server_mgmt_|server_audit_)/,
   execute: async (interaction: any) => {
     return handleServerManagementButtons(interaction);
   }

@@ -1,4 +1,4 @@
-import { ButtonInteraction, EmbedBuilder, ChannelType, PermissionsBitField, ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder } from 'discord.js';
+import { ButtonInteraction, EmbedBuilder, ChannelType, PermissionsBitField, ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
 import { logger } from "../../utils/logger";
 import { Colors } from '../../config/constants';
 
@@ -37,9 +37,51 @@ export async function handleAdminDashboardButton(interaction: ButtonInteraction)
         break;
       }
 
-      // ──────────────── CLEANUP ────────────────
+      // ──────────────── NUCLEAR CLEANUP CONFIRMATION ────────────────
       case 'admin_cleanup': {
-        await interaction.deferReply({ ephemeral: true });
+        const embed = new EmbedBuilder()
+          .setTitle('⚠️ DANGER ZONE: CONFIRM NUCLEAR SERVER WIPE')
+          .setColor(Colors.ERROR)
+          .setDescription(
+            `🛑 **WARNING: THIS ACTION IS DESTRUCTIVE AND IRREVERSIBLE!**\n\n` +
+            `This will permanently delete:\n` +
+            `• **All channels & categories** in **${guild.name}** (except this active channel and Discord protected channels)\n` +
+            `• **All custom server roles** (except @everyone and bot managed roles)\n\n` +
+            `Are you **100% sure** you want to completely wipe and reset this server?`
+          )
+          .setFooter({ text: 'Action will be logged. You cannot undo this.' });
+
+        const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
+          new ButtonBuilder()
+            .setCustomId('admin_cleanup_confirm')
+            .setLabel('🚨 YES, WIPE ENTIRE SERVER')
+            .setStyle(ButtonStyle.Danger),
+          new ButtonBuilder()
+            .setCustomId('admin_cleanup_cancel')
+            .setLabel('❌ Cancel')
+            .setStyle(ButtonStyle.Secondary)
+        );
+
+        await interaction.reply({ embeds: [embed], components: [row], ephemeral: true });
+        break;
+      }
+
+      case 'admin_cleanup_cancel': {
+        await interaction.update({
+          content: '✅ **Nuclear wipe cancelled.** No channels or roles were modified.',
+          embeds: [],
+          components: []
+        });
+        break;
+      }
+
+      case 'admin_cleanup_confirm': {
+        await interaction.update({
+          content: '⏳ **Nuclear Wipe in progress...** Deleting channels, categories, and custom roles...',
+          embeds: [],
+          components: []
+        });
+
         const channels = await guild.channels.fetch();
         let deleted = 0;
         const skipped: string[] = [];
@@ -95,7 +137,7 @@ export async function handleAdminDashboardButton(interaction: ButtonInteraction)
 
         let msg = `🧹 **Nuclear Cleanup Complete!**\nDeleted ${deleted} channels/categories and ${rolesDeleted} roles.`;
         if (skipped.length > 0) msg += `\n⚠️ Could not delete: ${skipped.join(', ')}`;
-        await interaction.followUp({ content: msg });
+        await interaction.followUp({ content: msg, ephemeral: true });
         break;
       }
 
