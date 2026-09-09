@@ -1,5 +1,45 @@
+# Dependencies
 node_modules/
+.pnp
+.pnp.js
+
+# Build Output
 dist/
+build/
+*.tsbuildinfo
+
+# Environment & Secrets
 .env
+.env.local
+.env.*.local
+!.env.example
+
+# Logs
 *.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS & IDE Metadata
 .DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.FullName
+
+# Agent & AI Artifacts
+.gemini/
+.agents/
+
+# Testing & Coverage
+coverage/
+.nyc_output/
+
+# Temporary / Scratch scripts
+*.scratch.js
+*.temp.js
