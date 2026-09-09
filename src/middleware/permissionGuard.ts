@@ -24,12 +24,45 @@ export function requireBotOwner(interaction: ChatInputCommandInteraction | Butto
 }
 
 export function requireAdmin(interaction: ChatInputCommandInteraction | ButtonInteraction): boolean {
-  if (interaction.memberPermissions) {
-    return interaction.memberPermissions.has(PermissionsBitField.Flags.Administrator) ||
-           interaction.memberPermissions.has(PermissionsBitField.Flags.ManageGuild);
+  // 1. Global Bot Owner bypass
+  if (env.BOT_OWNER_ID && interaction.user.id === env.BOT_OWNER_ID) {
+    return true;
   }
+
+  // 2. Server Owner has full authority on their own server
+  if (interaction.guild && interaction.guild.ownerId === interaction.user.id) {
+    return true;
+  }
+
+  // 3. Discord native Administrator or ManageGuild permissions
+  if (interaction.memberPermissions) {
+    if (interaction.memberPermissions.has(PermissionsBitField.Flags.Administrator) ||
+        interaction.memberPermissions.has(PermissionsBitField.Flags.ManageGuild)) {
+      return true;
+    }
+  }
+
   const member = interaction.member as any;
-  if (!member?.permissions) return false;
-  return member.permissions.has(PermissionsBitField.Flags.Administrator) ||
-         member.permissions.has(PermissionsBitField.Flags.ManageGuild);
+  if (member?.permissions) {
+    if (member.permissions.has(PermissionsBitField.Flags.Administrator) ||
+        member.permissions.has(PermissionsBitField.Flags.ManageGuild)) {
+      return true;
+    }
+  }
+
+  // 4. Role-based fallback: check if user holds an Admin/Mod/Owner role by name
+  if (interaction.guild && member) {
+    const adminRoleNames = ['Administrator', 'Admin', 'Owner', 'Moderator', 'Mod'];
+    if (Array.isArray(member.roles)) {
+      const hasRole = interaction.guild.roles.cache.some(
+        r => member.roles.includes(r.id) && adminRoleNames.includes(r.name)
+      );
+      if (hasRole) return true;
+    } else if (member.roles?.cache) {
+      const hasRole = member.roles.cache.some((r: any) => adminRoleNames.includes(r.name));
+      if (hasRole) return true;
+    }
+  }
+
+  return false;
 }

@@ -24,9 +24,9 @@ const event: EventHandler = {
 
     if (targetChannel && targetChannel.isTextBased()) {
       const embed = new EmbedBuilder()
-        .setTitle('👋 Welcome to GRINDOORS Bot')
+        .setTitle(`👋 Welcome to ${guild.name}!`)
         .setColor(Colors.PRIMARY)
-        .setDescription('Thank you for adding me to your server! Click below to start the setup process.');
+        .setDescription(`Thank you for adding me to **${guild.name}**! Click below to configure roles, channels, and modules for your community.`);
 
       const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
         new ButtonBuilder().setCustomId('setup_quick').setLabel('Quick Setup').setStyle(ButtonStyle.Primary),

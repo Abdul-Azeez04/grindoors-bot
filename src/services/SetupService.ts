@@ -123,9 +123,9 @@ export class SetupService {
       const hubChannel = guild.channels.cache.find(c => c.name.includes('welcome') || c.name.includes('general')) as any;
       if (hubChannel && hubChannel.isTextBased()) {
         const hubEmbed = new EmbedBuilder()
-          .setTitle('🚀 GRINDOORS COMMUNITY HUB')
+          .setTitle(`🚀 ${guild.name.toUpperCase()} COMMUNITY HUB`)
           .setColor(Colors.PRIMARY)
-          .setDescription('Welcome to Grindoors! Use the buttons below to navigate the community.');
+          .setDescription(`Welcome to **${guild.name}**! Use the buttons below to navigate the community.`);
           
         const row1 = new ActionRowBuilder<ButtonBuilder>().addComponents(
           new ButtonBuilder().setCustomId('hub_verify').setLabel('✅ Verify Account').setStyle(ButtonStyle.Success),
